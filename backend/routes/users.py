@@ -32,7 +32,9 @@ def create_user(current_user):
         full_name=data.get('full_name'),
         email=data.get('email'),
         hashed_password=hashed_pwd,
-        role=data.get('role')
+        role=data.get('role'),
+        empresa=data.get('empresa'),
+        departamento=data.get('departamento')
     )
     
     try:

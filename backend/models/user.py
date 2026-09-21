@@ -9,7 +9,9 @@ class User(db.Model):
     full_name = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
     hashed_password = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(50), nullable=False, default='Usuario')
+    role = db.Column(db.String(50), nullable=False, default='Usuario IFSA')
+    empresa = db.Column(db.String(255), nullable=True)
+    departamento = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
     updated_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -19,6 +21,8 @@ class User(db.Model):
             'full_name': self.full_name,
             'email': self.email,
             'role': self.role,
+            'empresa': self.empresa or '',
+            'departamento': self.departamento or '',
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

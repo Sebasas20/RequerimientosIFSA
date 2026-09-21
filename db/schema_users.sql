@@ -1,6 +1,6 @@
 -- db/schema_users.sql
 DO $$ BEGIN
-    CREATE TYPE user_role AS ENUM ('Administrador', 'Usuario');
+    CREATE TYPE user_role AS ENUM ('Administrador', 'Usuario', 'Usuario IFSA', 'Usuario Arturos');
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 CREATE TABLE IF NOT EXISTS requirement_users (
@@ -8,7 +8,9 @@ CREATE TABLE IF NOT EXISTS requirement_users (
     full_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     hashed_password VARCHAR(255) NOT NULL,
-    role user_role NOT NULL DEFAULT 'Usuario',
+    role user_role NOT NULL DEFAULT 'Usuario IFSA',
+    empresa VARCHAR(255),
+    departamento VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

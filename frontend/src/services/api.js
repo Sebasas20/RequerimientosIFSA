@@ -59,6 +59,7 @@ export const userService = {
 export const ticketService = {
   async getTickets(filters = {}) {
     const params = new URLSearchParams();
+    if (filters.departamento_destino) params.append('departamento_destino', filters.departamento_destino);
     if (filters.estado) params.append('estado', filters.estado);
     if (filters.departamento) params.append('departamento', filters.departamento);
     if (filters.search) params.append('search', filters.search);

@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from backend.models.ticket import db, Ticket
 from backend.utils.validators import validate_json, sanitize_input
-from backend.utils.auth_middleware import token_required, admin_required
+from backend.utils.auth_middleware import token_required, admin_required, ticket_admin_required
 
 tickets_bp = Blueprint('tickets', __name__)
 
@@ -12,10 +12,20 @@ def get_tickets(current_user):
         query = Ticket.query
         
         # Filtrado por Rol
-        if current_user.role == 'Usuario':
+        if current_user.role == 'Administrador':
+            depto_destino = request.args.get('departamento_destino')
+            if depto_destino:
+                query = query.filter(Ticket.departamento_destino == depto_destino)
+        elif current_user.role == 'Admin Data':
+            query = query.filter(Ticket.departamento_destino == 'BI')
+        elif current_user.role == 'Admin HelpDesk':
+            query = query.filter(Ticket.departamento_destino == 'HELPDESK')
+        else:
             query = query.filter(Ticket.creator_email == current_user.email)
-        
-        # Filtros Adicionales
+            depto_destino = request.args.get('departamento_destino')
+            if depto_destino:
+                query = query.filter(Ticket.departamento_destino == depto_destino)
+
         estado = request.args.get('estado')
         if estado:
             query = query.filter(Ticket.estado == estado)
@@ -33,6 +43,7 @@ def get_tickets(current_user):
             search_term = f"%{search}%"
             query = query.filter(db.or_(
                 Ticket.nombre_solicitante.ilike(search_term),
+                Ticket.asunto.ilike(search_term),
                 Ticket.id.ilike(search_term)
             ))
 
@@ -48,21 +59,38 @@ def create_ticket(current_user):
     try:
         data = sanitize_input(request.get_json())
         
-        required_fields = ['nombre_solicitante', 'empresa', 'departamento', 'descripcion', 'tipo_solicitud']
+        required_fields = ['nombre_solicitante', 'empresa', 'departamento', 'descripcion']
         for field in required_fields:
             if not data.get(field):
                 return jsonify({"error": f"El campo {field} es requerido"}), 400
-                
-        valid_tipos = ['Creación de Dashboards', 'Análisis profundo', 'Modelos Estadísticos/ML', 'Troubleshooting', 'Otros requerimientos']
-        if data['tipo_solicitud'] not in valid_tipos:
-            return jsonify({"error": "Tipo de solicitud inválido"}), 400
+
+        depto_destino = data.get('departamento_destino', 'BI')
+        
+        # Restricción para Usuario Arturos: Solo permite solicitudes a HelpDesk
+        if current_user.role == 'Usuario Arturos' and depto_destino == 'BI':
+            return jsonify({"error": "Los usuarios de Arturos solo pueden realizar solicitudes al departamento de HelpDesk"}), 403
+
+        asunto = data.get('asunto') or data['descripcion'][:60]
+        
+        detalles_adicionales = data.get('detalles_adicionales', {})
+        if not isinstance(detalles_adicionales, dict):
+            detalles_adicionales = {}
+
+        tipo_solicitud = data.get('tipo_solicitud')
+        if depto_destino == 'BI':
+            if not tipo_solicitud:
+                return jsonify({"error": "El campo tipo_solicitud es requerido para Requerimientos Data"}), 400
+            detalles_adicionales['tipo_solicitud'] = tipo_solicitud
 
         new_ticket = Ticket(
+            departamento_destino=depto_destino,
             nombre_solicitante=data['nombre_solicitante'],
             empresa=data['empresa'],
             departamento=data['departamento'],
+            asunto=asunto,
             descripcion=data['descripcion'],
-            tipo_solicitud=data['tipo_solicitud'],
+            tipo_solicitud=tipo_solicitud,
+            detalles_adicionales=detalles_adicionales,
             creator_email=current_user.email
         )
         
@@ -76,7 +104,7 @@ def create_ticket(current_user):
 
 @tickets_bp.route('/<string:ticket_id>', methods=['PATCH'])
 @token_required
-@admin_required
+@ticket_admin_required
 @validate_json
 def update_ticket(current_user, ticket_id):
     try:
@@ -84,11 +112,17 @@ def update_ticket(current_user, ticket_id):
         if not ticket:
             return jsonify({"error": "Ticket no encontrado"}), 404
             
+        if current_user.role == 'Admin Data' and ticket.departamento_destino != 'BI':
+            return jsonify({"error": "Acceso denegado: No tiene permisos para gestionar tickets de esta área"}), 403
+
+        if current_user.role == 'Admin HelpDesk' and ticket.departamento_destino != 'HELPDESK':
+            return jsonify({"error": "Acceso denegado: No tiene permisos para gestionar tickets de esta área"}), 403
+            
         data = sanitize_input(request.get_json())
         
         if 'estado' in data:
             nuevo_estado = data['estado']
-            valid_estados = ['Creado / Esperando Asignación', 'Asignado/Desarrollo', 'Información Requerida', 'Pausado', 'Rechazado/Fuera de Alcance']
+            valid_estados = ['Creado / Esperando Asignación', 'Asignado/Desarrollo', 'Información Requerida', 'Pausado', 'Rechazado/Fuera de Alcance', 'Cerrado/Resuelto']
             if nuevo_estado not in valid_estados:
                 return jsonify({"error": "Estado inválido"}), 400
                 
@@ -111,6 +145,15 @@ def update_ticket(current_user, ticket_id):
                 
         if 'motivo_justificacion' in data:
             ticket.motivo_justificacion = data['motivo_justificacion']
+
+        # Actualizar caso u otros detalles adicionales en JSONB
+        if 'caso' in data or 'detalles_adicionales' in data:
+            current_detalles = dict(ticket.detalles_adicionales or {})
+            if 'caso' in data:
+                current_detalles['caso'] = data['caso']
+            if 'detalles_adicionales' in data and isinstance(data['detalles_adicionales'], dict):
+                current_detalles.update(data['detalles_adicionales'])
+            ticket.detalles_adicionales = current_detalles
 
         db.session.commit()
         return jsonify(ticket.to_dict()), 200
