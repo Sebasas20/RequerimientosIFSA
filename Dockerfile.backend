@@ -7,6 +7,9 @@ RUN apt-get update && apt-get install -y libpq-dev gcc && rm -rf /var/lib/apt/li
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# The build context is the repository root, not ./backend: config.py sits beside
+# the package and `backend.app` imports it as a top-level module, so flattening
+# the package here would break the import at runtime.
 COPY backend/ ./backend/
 COPY config.py .
 
@@ -15,4 +18,9 @@ EXPOSE 5000
 ENV FLASK_APP=backend/app.py
 ENV FLASK_ENV=production
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "3", "--timeout", "60", "--access-logfile", "-", "--error-logfile", "-", "backend.app:create_app()"]
+# Gunicorn instead of `flask run`: the Flask development server is single
+# threaded and explicitly unsupported for production. app.py exposes a
+# create_app() factory, hence the call syntax.
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "3", \
+     "--timeout", "60", "--access-logfile", "-", "--error-logfile", "-", \
+     "backend.app:create_app()"]
