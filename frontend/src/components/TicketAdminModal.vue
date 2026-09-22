@@ -81,6 +81,9 @@
               <option value="Pausado">Pausado</option>
               <option value="Cerrado/Resuelto">Cerrado / Resuelto</option>
               <option value="Rechazado/Fuera de Alcance">Rechazado/Fuera de Alcance</option>
+              <option v-if="form.estado && !['Creado / Esperando Asignación', 'Asignado/Desarrollo', 'Información Requerida', 'Pausado', 'Cerrado/Resuelto', 'Rechazado/Fuera de Alcance'].includes(form.estado)" :value="form.estado">
+                {{ form.estado }}
+              </option>
             </select>
           </div>
           
@@ -112,11 +115,13 @@ const props = defineProps({
 })
 const emit = defineEmits(['close', 'ticket-updated'])
 
+const initialEstado = props.ticket.estado === 'Asignado / En progreso' ? 'Asignado/Desarrollo' : (props.ticket.estado || 'Creado / Esperando Asignación')
+
 const form = reactive({
   prioridad: props.ticket.prioridad || '',
   encargado: props.ticket.encargado || '',
   caso: props.ticket.detalles_adicionales?.caso || '',
-  estado: props.ticket.estado || 'Creado / Esperando Asignación',
+  estado: initialEstado,
   motivo_justificacion: props.ticket.motivo_justificacion || ''
 })
 

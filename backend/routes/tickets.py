@@ -122,9 +122,17 @@ def update_ticket(current_user, ticket_id):
         
         if 'estado' in data:
             nuevo_estado = data['estado']
-            valid_estados = ['Creado / Esperando Asignación', 'Asignado/Desarrollo', 'Información Requerida', 'Pausado', 'Rechazado/Fuera de Alcance', 'Cerrado/Resuelto']
+            valid_estados = [
+                'Creado / Esperando Asignación',
+                'Asignado/Desarrollo',
+                'Asignado / En progreso',
+                'Información Requerida',
+                'Pausado',
+                'Rechazado/Fuera de Alcance',
+                'Cerrado/Resuelto'
+            ]
             if nuevo_estado not in valid_estados:
-                return jsonify({"error": "Estado inválido"}), 400
+                return jsonify({"error": f"Estado inválido: {nuevo_estado}"}), 400
                 
             if nuevo_estado in ['Rechazado/Fuera de Alcance', 'Pausado', 'Información Requerida']:
                 if not data.get('motivo_justificacion') and not ticket.motivo_justificacion:
@@ -134,13 +142,14 @@ def update_ticket(current_user, ticket_id):
             
         if 'prioridad' in data:
             valid_priorities = ['Prioridad 1', 'Prioridad 2', 'Prioridad 3', 'Prioridad 4']
-            if data['prioridad'] not in valid_priorities and data['prioridad'] is not None:
+            p = data['prioridad']
+            if p and p not in valid_priorities:
                 return jsonify({"error": "Prioridad inválida"}), 400
-            ticket.prioridad = data['prioridad']
+            ticket.prioridad = p if p else None
             
         if 'encargado' in data:
             ticket.encargado = data['encargado']
-            if ticket.estado == 'Creado / Esperando Asignación':
+            if 'estado' not in data and ticket.estado == 'Creado / Esperando Asignación':
                 ticket.estado = 'Asignado/Desarrollo'
                 
         if 'motivo_justificacion' in data:

@@ -10,16 +10,16 @@ categorias_bp = Blueprint('categorias', __name__)
 def get_categorias(current_user):
     query = Categoria.query
 
-    # Filtrar automáticamente según el rol si es administrador de área
-    if current_user.role == 'Admin Data':
-        query = query.filter_by(departamento_destino='BI')
-    elif current_user.role == 'Admin HelpDesk':
-        query = query.filter_by(departamento_destino='HELPDESK')
+    # Si se especifica departamento_destino en la petición (ej. al crear un ticket de Data), aplicar ese filtro
+    depto_filter = request.args.get('departamento_destino')
+    if depto_filter:
+        query = query.filter_by(departamento_destino=depto_filter)
     else:
-        # Para Super Admin o usuarios generales, permitir filtro por query param
-        depto_filter = request.args.get('departamento_destino')
-        if depto_filter:
-            query = query.filter_by(departamento_destino=depto_filter)
+        # De lo contrario, si es administrador de área sin filtro explícito, restringir a su departamento
+        if current_user.role == 'Admin Data':
+            query = query.filter_by(departamento_destino='BI')
+        elif current_user.role == 'Admin HelpDesk':
+            query = query.filter_by(departamento_destino='HELPDESK')
 
     categorias = query.order_by(Categoria.nombre.asc()).all()
     return jsonify([c.to_dict() for c in categorias]), 200

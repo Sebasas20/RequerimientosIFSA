@@ -16,42 +16,17 @@ from backend.routes.tickets import tickets_bp
 from backend.routes.encargados import encargados_bp
 from backend.routes.categorias import categorias_bp
 
-def seed_initial_categories():
-    initial_bi = [
-        'Creación de Dashboards',
-        'Análisis profundo',
-        'Modelos Estadísticos/ML',
-        'Troubleshooting',
-        'Otros requerimientos'
-    ]
-    initial_helpdesk = [
-        'Impresión de Facturas',
-        'Factura Duplicada',
-        'Odoo',
-        'Merchant',
-        'Printer Fiscal',
-        'Confirmación de Zelle',
-        'Diferencia Fiscal',
-        'Gerencia',
-        'Error en el Formato de Impresión de la Factura',
-        'Biométrico',
-        'Conexión con Bases de Datos',
-        'POS de venta',
-        'Error en el Contenido de la Factura',
-        'Conexión de Red',
-        'Impresora',
-        'Otros'
-    ]
-
-    for cat_name in initial_bi:
-        if not Categoria.query.filter_by(nombre=cat_name, departamento_destino='BI').first():
-            db.session.add(Categoria(nombre=cat_name, departamento_destino='BI'))
-
-    for cat_name in initial_helpdesk:
-        if not Categoria.query.filter_by(nombre=cat_name, departamento_destino='HELPDESK').first():
-            db.session.add(Categoria(nombre=cat_name, departamento_destino='HELPDESK'))
-
-    db.session.commit()
+def ensure_enum_values():
+    try:
+        values = ['Cerrado/Resuelto', 'Cerrado / Resuelto', 'Asignado / En progreso']
+        for val in values:
+            try:
+                db.session.execute(db.text(f"ALTER TYPE ticket_estado ADD VALUE IF NOT EXISTS '{val}';"))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+    except Exception:
+        pass
 
 def create_app():
     app = Flask(__name__)
@@ -65,7 +40,7 @@ def create_app():
 
     with app.app_context():
         db.create_all()
-        seed_initial_categories()
+        ensure_enum_values()
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(users_bp, url_prefix='/api/users')
