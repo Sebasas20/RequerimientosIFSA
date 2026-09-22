@@ -40,6 +40,14 @@
         <div class="nav-item" :class="{ active: $route.path === '/' }" @click="navigate('/')">
           <span style="font-size: 1.1rem;">📊</span> Dashboard
         </div>
+
+        <div v-if="authState.canManageTickets" class="nav-item" :class="{ active: $route.path === '/categorias' }" @click="navigate('/categorias')">
+          <span style="font-size: 1.1rem;">🏷️</span> Gestión de Categorías
+        </div>
+
+        <div v-if="authState.canManageTickets" class="nav-item" :class="{ active: $route.path === '/encargados' }" @click="navigate('/encargados')">
+          <span style="font-size: 1.1rem;">🛠️</span> Gestión de Encargados
+        </div>
         
         <div v-if="authState.isAdmin" class="nav-item" :class="{ active: $route.path === '/usuarios' }" @click="navigate('/usuarios')">
           <span style="font-size: 1.1rem;">👥</span> Gestión de Usuarios
@@ -104,6 +112,8 @@ const userInitial = computed(() => {
 
 const currentRouteTitle = computed(() => {
   if (route.path === '/usuarios') return 'Usuarios'
+  if (route.path === '/encargados') return 'Encargados'
+  if (route.path === '/categorias') return 'Categorías'
   return 'Dashboard'
 })
 

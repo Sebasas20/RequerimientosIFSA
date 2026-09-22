@@ -9,27 +9,17 @@
       <form @submit.prevent="updateTicket" class="form-wrapper">
         <div class="modal-scroll-body">
           <div class="ticket-details">
-            <p><strong>Área Destino:</strong> <span class="badge badge-info">{{ ticket.departamento_destino === 'HELPDESK' ? 'HELPDESK' : 'DATA' }}</span></p>
+            <p v-if="ticket.departamento_destino !== 'HELPDESK'"><strong>Área Destino:</strong> <span class="badge badge-info">DATA</span></p>
             <p><strong>Solicitante:</strong> {{ ticket.nombre_solicitante }}</p>
             <p v-if="ticket.detalles_adicionales?.contacto"><strong>Contacto:</strong> {{ ticket.detalles_adicionales.contacto }}</p>
             <p><strong>Correo Creador:</strong> {{ ticket.creator_email || 'No asociado' }}</p>
             <p><strong>Empresa / Depto:</strong> {{ ticket.empresa }} - {{ ticket.departamento }}</p>
             <p><strong>Asunto:</strong> {{ ticket.asunto || ticket.descripcion.substring(0, 50) }}</p>
             <p v-if="ticket.tipo_solicitud"><strong>Tipo Solicitud:</strong> {{ ticket.tipo_solicitud }}</p>
-            <p v-if="ticket.detalles_adicionales?.caso"><strong>Caso HelpDesk:</strong> {{ ticket.detalles_adicionales.caso }}</p>
             <p><strong>Descripción:</strong> {{ ticket.descripcion }}</p>
           </div>
           
           <hr />
-
-          <!-- Campo adicional para HelpDesk: Asignación de Caso -->
-          <div v-if="ticket.departamento_destino === 'HELPDESK'" class="form-group">
-            <label>Clasificación del Caso (HelpDesk)</label>
-            <select v-model="form.caso" class="form-control">
-              <option value="">Seleccione clasificación...</option>
-              <option v-for="casoOpt in opcionesCasoHelpDesk" :key="casoOpt" :value="casoOpt">{{ casoOpt }}</option>
-            </select>
-          </div>
 
           <div class="form-group">
             <label>Asignar Prioridad</label>
@@ -42,9 +32,44 @@
             </select>
           </div>
           
+          <!-- Desplegable dinámico de encargados según el departamento del ticket -->
           <div class="form-group">
             <label>Encargado / Técnico</label>
-            <input type="text" v-model="form.encargado" class="form-control" placeholder="Nombre del encargado o técnico" />
+            <select v-model="form.encargado" class="form-control">
+              <option value="">Sin asignar / Ninguno</option>
+              <option 
+                v-for="enc in encargadosList" 
+                :key="enc.id" 
+                :value="enc.nombre">
+                {{ enc.nombre }}
+              </option>
+
+              <!-- Opción de respaldo si el ticket tiene un encargado legacy que no está en la lista -->
+              <option 
+                v-if="form.encargado && !encargadosList.some(e => e.nombre === form.encargado)" 
+                :value="form.encargado">
+                {{ form.encargado }} (Actual)
+              </option>
+            </select>
+          </div>
+
+          <!-- Clasificación del Caso (HelpDesk) -->
+          <div class="form-group" v-if="ticket.departamento_destino === 'HELPDESK'">
+            <label>Clasificación del Caso (HelpDesk)</label>
+            <select v-model="form.caso" class="form-control">
+              <option value="">Seleccione Clasificación / Caso</option>
+              <option 
+                v-for="opc in opcionesCasoHelpDesk" 
+                :key="opc" 
+                :value="opc">
+                {{ opc }}
+              </option>
+              <option 
+                v-if="form.caso && !opcionesCasoHelpDesk.includes(form.caso)" 
+                :value="form.caso">
+                {{ form.caso }} (Actual)
+              </option>
+            </select>
           </div>
 
           <div class="form-group">
@@ -79,43 +104,44 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
-import { ticketService } from '../services/api'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { ticketService, encargadoService, categoriaService } from '../services/api'
 
 const props = defineProps({
   ticket: Object
 })
 const emit = defineEmits(['close', 'ticket-updated'])
 
-const opcionesCasoHelpDesk = [
-  'Impresión de Facturas',
-  'Factura Duplicada',
-  'Odoo',
-  'Merchant',
-  'Printer Fiscal',
-  'Confirmación de Zelle',
-  'Diferencia Fiscal',
-  'Gerencia',
-  'Error en el Formato de Impresión de la Factura',
-  'Biométrico',
-  'Conexión con Bases de Datos',
-  'POS de venta',
-  'Error en el Contenido de la Factura',
-  'Conexión de Red',
-  'Impresora',
-  'Otros'
-]
-
 const form = reactive({
-  caso: props.ticket.detalles_adicionales?.caso || '',
   prioridad: props.ticket.prioridad || '',
   encargado: props.ticket.encargado || '',
+  caso: props.ticket.detalles_adicionales?.caso || '',
   estado: props.ticket.estado || 'Creado / Esperando Asignación',
   motivo_justificacion: props.ticket.motivo_justificacion || ''
 })
 
+const encargadosList = ref([])
+const opcionesCasoHelpDesk = ref([])
 const loading = ref(false)
 const error = ref('')
+
+onMounted(async () => {
+  try {
+    const listEnc = await encargadoService.getEncargados(props.ticket.departamento_destino || '')
+    encargadosList.value = listEnc
+  } catch (err) {
+    console.error('Error al cargar la lista de encargados:', err)
+  }
+
+  if (props.ticket.departamento_destino === 'HELPDESK') {
+    try {
+      const cats = await categoriaService.getCategorias('HELPDESK')
+      opcionesCasoHelpDesk.value = cats.map(c => c.nombre)
+    } catch (err) {
+      console.error('Error al cargar categorías de HelpDesk:', err)
+    }
+  }
+})
 
 const requiresJustification = computed(() => {
   return ['Rechazado/Fuera de Alcance', 'Pausado', 'Información Requerida', 'Cerrado/Resuelto'].includes(form.estado)
@@ -130,8 +156,10 @@ const updateTicket = async () => {
       prioridad: form.prioridad,
       encargado: form.encargado,
       estado: form.estado,
-      motivo_justificacion: form.motivo_justificacion,
-      caso: form.caso
+      motivo_justificacion: form.motivo_justificacion
+    }
+    if (props.ticket.departamento_destino === 'HELPDESK') {
+      payload.caso = form.caso
     }
     const res = await ticketService.updateTicket(props.ticket.id, payload)
     emit('ticket-updated', res)

@@ -4,6 +4,14 @@
     <div class="login-card">
       <div class="login-header">
         <img src="../assets/logo-grupo-ifsa-1.png" alt="IFSA Logo" class="login-logo" />
+        
+        <!-- Banner horizontal de logos de empresas del grupo -->
+        <div class="group-logos-banner">
+          <img src="../assets/logo-01.png" alt="Arturos" class="banner-logo banner-logo-arturos" title="Arturos" />
+          <img src="../assets/logo-maralac.png" alt="Grupo Maralac" class="banner-logo banner-logo-maralac" title="Grupo Maralac" />
+          <img src="../assets/logo-protinal.png" alt="Protinal" class="banner-logo banner-logo-protinal" title="Protinal" />
+        </div>
+
         <h2>Iniciar Sesión</h2>
         <p>Sistema de Gestión de Requerimientos</p>
       </div>
@@ -82,7 +90,46 @@ const handleLogin = async () => {
 
 .login-logo {
   max-width: 180px;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.group-logos-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 1.25rem;
+  margin: 0.85rem 0 1.5rem 0;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.banner-logo {
+  width: auto;
+  object-fit: contain;
+  opacity: 0.95;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.banner-logo-arturos {
+  height: 34px;
+  max-width: 95px;
+}
+
+.banner-logo-maralac {
+  height: 28px;
+  max-width: 110px;
+}
+
+.banner-logo-protinal {
+  height: 32px;
+  max-width: 95px;
+}
+
+.banner-logo:hover {
+  opacity: 1;
+  transform: scale(1.05);
 }
 
 .login-header h2 {

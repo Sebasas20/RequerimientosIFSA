@@ -269,13 +269,19 @@ watch(() => uiState.triggerRefresh, () => {
 
 const getBadgeClass = (estado) => {
   switch(estado) {
-    case 'Creado / Esperando Asignación': return 'badge badge-warning'
-    case 'Asignado/Desarrollo': return 'badge badge-info'
-    case 'Información Requerida': return 'badge badge-warning'
-    case 'Pausado': return 'badge badge-secondary'
-    case 'Cerrado/Resuelto': return 'badge badge-success'
-    case 'Rechazado/Fuera de Alcance': return 'badge badge-danger'
-    default: return 'badge badge-secondary'
+    case 'Creado / Esperando Asignación': 
+      return 'badge badge-status badge-info'
+    case 'Asignado/Desarrollo':
+    case 'Asignado / En progreso':
+    case 'Información Requerida': 
+      return 'badge badge-status badge-warning'
+    case 'Pausado':
+    case 'Rechazado/Fuera de Alcance': 
+      return 'badge badge-status badge-danger'
+    case 'Cerrado/Resuelto': 
+      return 'badge badge-status badge-success'
+    default: 
+      return 'badge badge-status badge-secondary'
   }
 }
 

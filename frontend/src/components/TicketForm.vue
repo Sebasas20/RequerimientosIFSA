@@ -34,7 +34,7 @@
             <input type="text" v-model="form.asunto" class="form-control" placeholder="Resumen corto de la solicitud o falla" required />
           </div>
 
-          <!-- Solo para DATA: Tipo de solicitud -->
+          <!-- Solo para DATA: Tipo de solicitud dinámico -->
           <div v-if="departamentoDestino === 'BI'" class="form-group">
             <label>Tipo de Solicitud Data</label>
             <select v-model="form.tipo_solicitud" class="form-control" required>
@@ -64,7 +64,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { ticketService } from '../services/api'
+import { ticketService, categoriaService } from '../services/api'
 import { authState } from '../store/auth'
 
 const props = defineProps({
@@ -76,21 +76,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'ticket-created'])
 
-const opcionesEmpresa = [
-  'Arturos',
-  'Grupo Maralac',
-  'Restaurantes',
-  'Paica',
-  'Grupo IFSA'
-]
-
-const opcionesTipoSolicitud = [
-  'Creación de Dashboards',
-  'Análisis profundo',
-  'Modelos Estadísticos/ML',
-  'Troubleshooting',
-  'Otros requerimientos'
-]
+const opcionesTipoSolicitud = ref([])
 
 const form = reactive({
   departamento_destino: props.departamentoDestino,
@@ -103,11 +89,20 @@ const form = reactive({
   descripcion: ''
 })
 
-onMounted(() => {
+onMounted(async () => {
   if (authState.user) {
     if (authState.user.full_name) form.nombre_solicitante = authState.user.full_name
     if (authState.user.empresa) form.empresa = authState.user.empresa
     if (authState.user.departamento) form.departamento = authState.user.departamento
+  }
+
+  if (props.departamentoDestino === 'BI') {
+    try {
+      const list = await categoriaService.getCategorias('BI')
+      opcionesTipoSolicitud.value = list.map(c => c.nombre)
+    } catch (err) {
+      console.error('Error al cargar categorías de Data:', err)
+    }
   }
 })
 

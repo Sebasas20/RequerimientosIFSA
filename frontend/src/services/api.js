@@ -1,4 +1,3 @@
-
 import { authState } from '../store/auth';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
@@ -85,6 +84,62 @@ export const ticketService = {
       method: 'PATCH',
       headers: getHeaders(),
       body: JSON.stringify(data)
+    });
+    return handleResponse(res);
+  }
+};
+
+export const encargadoService = {
+  async getEncargados(departamento_destino = '') {
+    const params = new URLSearchParams();
+    if (departamento_destino) params.append('departamento_destino', departamento_destino);
+    const res = await fetch(`${API_URL}/encargados/?${params.toString()}`, {
+      headers: getHeaders()
+    });
+    return handleResponse(res);
+  },
+
+  async createEncargado(data) {
+    const res = await fetch(`${API_URL}/encargados/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(data)
+    });
+    return handleResponse(res);
+  },
+
+  async deleteEncargado(id) {
+    const res = await fetch(`${API_URL}/encargados/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders()
+    });
+    return handleResponse(res);
+  }
+};
+
+export const categoriaService = {
+  async getCategorias(departamento_destino = '') {
+    const params = new URLSearchParams();
+    if (departamento_destino) params.append('departamento_destino', departamento_destino);
+    const res = await fetch(`${API_URL}/categorias/?${params.toString()}`, {
+      headers: getHeaders()
+    });
+    return handleResponse(res);
+  },
+
+  async createCategoria(data) {
+    const res = await fetch(`${API_URL}/categorias/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(data)
+    });
+    return handleResponse(res);
+  },
+
+  async deleteCategoria(id) {
+    const res = await fetch(`${API_URL}/categorias/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders()
     });
     return handleResponse(res);
   }
