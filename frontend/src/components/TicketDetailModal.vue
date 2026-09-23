@@ -21,8 +21,7 @@
           <p v-if="ticket.detalles_adicionales?.contacto"><strong>Contacto:</strong> {{ ticket.detalles_adicionales.contacto }}</p>
           <p><strong>Correo Creador:</strong> {{ ticket.creator_email || 'No asociado' }}</p>
           <p><strong>Empresa / Depto:</strong> {{ ticket.empresa }} - {{ ticket.departamento }}</p>
-          <p v-if="ticket.tipo_solicitud"><strong>Tipo de Solicitud:</strong> {{ ticket.tipo_solicitud }}</p>
-          <p v-if="ticket.detalles_adicionales?.caso"><strong>Clasificación del Caso:</strong> {{ ticket.detalles_adicionales.caso }}</p>
+          <p v-if="ticket.tipo_solicitud"><strong>Tipo de Solicitud / Clasificación:</strong> {{ ticket.tipo_solicitud }}</p>
           <p><strong>Prioridad:</strong> {{ ticket.prioridad || 'No asignada' }}</p>
           <p><strong>Encargado / Técnico:</strong> {{ ticket.encargado || 'Sin asignar' }}</p>
           

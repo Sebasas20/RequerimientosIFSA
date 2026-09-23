@@ -121,7 +121,7 @@
             <td style="font-weight: 500;">{{ ticket.nombre_solicitante }}</td>
             <td>{{ ticket.departamento || '-' }}</td>
             <td style="font-weight: 500; color: var(--text-main);">{{ ticket.asunto || ticket.descripcion.substring(0,40) }}</td>
-            <td>{{ ticket.tipo_solicitud || ticket.detalles_adicionales?.caso || '-' }}</td>
+            <td>{{ ticket.tipo_solicitud || '-' }}</td>
             <td>{{ ticket.prioridad || '-' }}</td>
             <td v-if="!authState.isAreaAdmin">{{ ticket.encargado || '-' }}</td>
             <td>

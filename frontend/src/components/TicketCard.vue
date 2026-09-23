@@ -31,9 +31,9 @@
           <span class="meta-icon">🏢</span>
           <span class="meta-text">{{ ticket.empresa ? ticket.empresa + ' - ' : '' }}{{ ticket.departamento || '-' }}</span>
         </div>
-        <div class="meta-row" v-if="ticket.tipo_solicitud || ticket.detalles_adicionales?.caso">
+        <div class="meta-row" v-if="ticket.tipo_solicitud">
           <span class="meta-icon">📌</span>
-          <span class="meta-text">{{ ticket.tipo_solicitud || ticket.detalles_adicionales?.caso }}</span>
+          <span class="meta-text">{{ ticket.tipo_solicitud }}</span>
         </div>
         <div class="meta-row" v-if="!isAreaAdmin && ticket.encargado">
           <span class="meta-icon">🛠️</span>

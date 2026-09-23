@@ -80,7 +80,6 @@ def create_ticket(current_user):
         if depto_destino == 'BI':
             if not tipo_solicitud:
                 return jsonify({"error": "El campo tipo_solicitud es requerido para Requerimientos Data"}), 400
-            detalles_adicionales['tipo_solicitud'] = tipo_solicitud
 
         new_ticket = Ticket(
             departamento_destino=depto_destino,
@@ -155,13 +154,19 @@ def update_ticket(current_user, ticket_id):
         if 'motivo_justificacion' in data:
             ticket.motivo_justificacion = data['motivo_justificacion']
 
-        # Actualizar caso u otros detalles adicionales en JSONB
-        if 'caso' in data or 'detalles_adicionales' in data:
+        # Generalización: Asignar tipo_solicitud / caso directamente a la columna tipo_solicitud
+        if 'tipo_solicitud' in data or 'caso' in data:
+            val = data.get('tipo_solicitud')
+            if val is None:
+                val = data.get('caso')
+            ticket.tipo_solicitud = val
+
+        # Limpiar 'caso' de detalles_adicionales JSONB
+        if 'detalles_adicionales' in data or (ticket.detalles_adicionales and 'caso' in ticket.detalles_adicionales):
             current_detalles = dict(ticket.detalles_adicionales or {})
-            if 'caso' in data:
-                current_detalles['caso'] = data['caso']
             if 'detalles_adicionales' in data and isinstance(data['detalles_adicionales'], dict):
                 current_detalles.update(data['detalles_adicionales'])
+            current_detalles.pop('caso', None)
             ticket.detalles_adicionales = current_detalles
 
         db.session.commit()

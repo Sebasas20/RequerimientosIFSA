@@ -56,7 +56,7 @@
           <!-- Clasificación del Caso (HelpDesk) -->
           <div class="form-group" v-if="ticket.departamento_destino === 'HELPDESK'">
             <label>Clasificación del Caso (HelpDesk)</label>
-            <select v-model="form.caso" class="form-control">
+            <select v-model="form.tipo_solicitud" class="form-control">
               <option value="">Seleccione Clasificación / Caso</option>
               <option 
                 v-for="opc in opcionesCasoHelpDesk" 
@@ -65,9 +65,9 @@
                 {{ opc }}
               </option>
               <option 
-                v-if="form.caso && !opcionesCasoHelpDesk.includes(form.caso)" 
-                :value="form.caso">
-                {{ form.caso }} (Actual)
+                v-if="form.tipo_solicitud && !opcionesCasoHelpDesk.includes(form.tipo_solicitud)" 
+                :value="form.tipo_solicitud">
+                {{ form.tipo_solicitud }} (Actual)
               </option>
             </select>
           </div>
@@ -120,7 +120,7 @@ const initialEstado = props.ticket.estado === 'Asignado / En progreso' ? 'Asigna
 const form = reactive({
   prioridad: props.ticket.prioridad || '',
   encargado: props.ticket.encargado || '',
-  caso: props.ticket.detalles_adicionales?.caso || '',
+  tipo_solicitud: props.ticket.tipo_solicitud || props.ticket.detalles_adicionales?.caso || '',
   estado: initialEstado,
   motivo_justificacion: props.ticket.motivo_justificacion || ''
 })
@@ -164,7 +164,7 @@ const updateTicket = async () => {
       motivo_justificacion: form.motivo_justificacion
     }
     if (props.ticket.departamento_destino === 'HELPDESK') {
-      payload.caso = form.caso
+      payload.tipo_solicitud = form.tipo_solicitud
     }
     const res = await ticketService.updateTicket(props.ticket.id, payload)
     emit('ticket-updated', res)
