@@ -12,7 +12,7 @@
         <div 
           v-if="!isArturosUser"
           class="service-card" 
-          @click="$emit('select-service', 'BI')">
+          @click="$emit('select-service', 'DATA')">
           <div class="service-icon">📊</div>
           <div class="service-content">
             <h3>Solicitudes de Datos y Analítica</h3>

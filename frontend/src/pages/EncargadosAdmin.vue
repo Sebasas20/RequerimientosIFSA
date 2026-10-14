@@ -25,8 +25,8 @@
         </button>
         <button 
           class="tab-btn" 
-          :class="{ active: filterDepto === 'BI' }" 
-          @click="selectDepto('BI')">
+          :class="{ active: filterDepto === 'DATA' }" 
+          @click="selectDepto('DATA')">
           📊 Requerimientos Data
         </button>
         <button 
@@ -123,7 +123,7 @@
               <label>Departamento Destino</label>
               <select v-model="form.departamento_destino" class="form-control" required>
                 <option value="" disabled>Seleccione departamento...</option>
-                <option value="BI">📊 Requerimientos Data (BI)</option>
+                <option value="DATA">📊 Requerimientos Data (DATA)</option>
                 <option value="HELPDESK">💻 HelpDesk Soporte TI (HELPDESK)</option>
               </select>
             </div>
@@ -207,7 +207,7 @@ const openCreateModal = () => {
   errorMsg.value = ''
   form.nombre = ''
   if (authState.isAdminData) {
-    form.departamento_destino = 'BI'
+    form.departamento_destino = 'DATA'
   } else if (authState.isAdminHelpDesk) {
     form.departamento_destino = 'HELPDESK'
   } else {
@@ -258,7 +258,7 @@ const formatDate = (dateString) => {
 
 onMounted(() => {
   if (authState.isAdminData) {
-    filterDepto.value = 'BI'
+    filterDepto.value = 'DATA'
   } else if (authState.isAdminHelpDesk) {
     filterDepto.value = 'HELPDESK'
   }

@@ -17,7 +17,7 @@ def get_tickets(current_user):
             if depto_destino:
                 query = query.filter(Ticket.departamento_destino == depto_destino)
         elif current_user.role == 'Admin Data':
-            query = query.filter(Ticket.departamento_destino == 'BI')
+            query = query.filter(Ticket.departamento_destino == 'DATA')
         elif current_user.role == 'Admin HelpDesk':
             query = query.filter(Ticket.departamento_destino == 'HELPDESK')
         else:
@@ -64,10 +64,10 @@ def create_ticket(current_user):
             if not data.get(field):
                 return jsonify({"error": f"El campo {field} es requerido"}), 400
 
-        depto_destino = data.get('departamento_destino', 'BI')
+        depto_destino = data.get('departamento_destino', 'DATA')
         
         # Restricción para Usuario Arturos: Solo permite solicitudes a HelpDesk
-        if current_user.role == 'Usuario Arturos' and depto_destino == 'BI':
+        if current_user.role == 'Usuario Arturos' and depto_destino == 'DATA':
             return jsonify({"error": "Los usuarios de Arturos solo pueden realizar solicitudes al departamento de HelpDesk"}), 403
 
         asunto = data.get('asunto') or data['descripcion'][:60]
@@ -77,7 +77,7 @@ def create_ticket(current_user):
             detalles_adicionales = {}
 
         tipo_solicitud = data.get('tipo_solicitud')
-        if depto_destino == 'BI':
+        if depto_destino == 'DATA':
             if not tipo_solicitud:
                 return jsonify({"error": "El campo tipo_solicitud es requerido para Requerimientos Data"}), 400
 
@@ -111,7 +111,7 @@ def update_ticket(current_user, ticket_id):
         if not ticket:
             return jsonify({"error": "Ticket no encontrado"}), 404
             
-        if current_user.role == 'Admin Data' and ticket.departamento_destino != 'BI':
+        if current_user.role == 'Admin Data' and ticket.departamento_destino != 'DATA':
             return jsonify({"error": "Acceso denegado: No tiene permisos para gestionar tickets de esta área"}), 403
 
         if current_user.role == 'Admin HelpDesk' and ticket.departamento_destino != 'HELPDESK':

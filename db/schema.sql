@@ -20,7 +20,7 @@ EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 CREATE TABLE IF NOT EXISTS requirement_tickets (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    departamento_destino VARCHAR(50) NOT NULL DEFAULT 'BI',
+    departamento_destino VARCHAR(50) NOT NULL DEFAULT 'DATA',
     nombre_solicitante VARCHAR(255) NOT NULL,
     empresa VARCHAR(255) NOT NULL,
     departamento VARCHAR(255) NOT NULL,

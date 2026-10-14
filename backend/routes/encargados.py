@@ -12,7 +12,7 @@ def get_encargados(current_user):
 
     # Filtrar automáticamente según el rol del usuario si es administrador de área
     if current_user.role == 'Admin Data':
-        query = query.filter_by(departamento_destino='BI')
+        query = query.filter_by(departamento_destino='DATA')
     elif current_user.role == 'Admin HelpDesk':
         query = query.filter_by(departamento_destino='HELPDESK')
     else:
@@ -37,15 +37,15 @@ def create_encargado(current_user):
 
     # Determinación automática del departamento
     if current_user.role == 'Admin Data':
-        departamento_destino = 'BI'
+        departamento_destino = 'DATA'
     elif current_user.role == 'Admin HelpDesk':
         departamento_destino = 'HELPDESK'
     else:
         # Super Admin especifica el departamento destino
         departamento_destino = data.get('departamento_destino', '').strip()
 
-    if departamento_destino not in ['BI', 'HELPDESK']:
-        return jsonify({'error': 'Debe especificar un departamento destino válido (BI o HELPDESK)'}), 400
+    if departamento_destino not in ['DATA', 'HELPDESK']:
+        return jsonify({'error': 'Debe especificar un departamento destino válido (DATA o HELPDESK)'}), 400
 
     # Validar duplicados en el mismo departamento
     existing = Encargado.query.filter_by(nombre=nombre, departamento_destino=departamento_destino).first()
@@ -72,7 +72,7 @@ def delete_encargado(current_user, id):
         return jsonify({'error': 'Encargado no encontrado'}), 404
 
     # Restricción de borrado por departamento
-    if current_user.role == 'Admin Data' and encargado.departamento_destino != 'BI':
+    if current_user.role == 'Admin Data' and encargado.departamento_destino != 'DATA':
         return jsonify({'error': 'No tiene permisos para eliminar encargados de otro departamento'}), 403
     if current_user.role == 'Admin HelpDesk' and encargado.departamento_destino != 'HELPDESK':
         return jsonify({'error': 'No tiene permisos para eliminar encargados de otro departamento'}), 403

@@ -9,7 +9,7 @@ class Ticket(db.Model):
     __tablename__ = 'requirement_tickets'
 
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    departamento_destino = db.Column(db.String(50), nullable=False, default='BI')
+    departamento_destino = db.Column(db.String(50), nullable=False, default='DATA')
     nombre_solicitante = db.Column(db.String(255), nullable=False)
     empresa = db.Column(db.String(255), nullable=False)
     departamento = db.Column(db.String(255), nullable=False)
@@ -28,7 +28,7 @@ class Ticket(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'departamento_destino': self.departamento_destino or 'BI',
+            'departamento_destino': self.departamento_destino or 'DATA',
             'nombre_solicitante': self.nombre_solicitante,
             'empresa': self.empresa,
             'departamento': self.departamento,

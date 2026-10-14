@@ -35,7 +35,7 @@
           </div>
 
           <!-- Solo para DATA: Tipo de solicitud dinámico -->
-          <div v-if="departamentoDestino === 'BI'" class="form-group">
+          <div v-if="departamentoDestino === 'DATA'" class="form-group">
             <label>Tipo de Solicitud Data</label>
             <select v-model="form.tipo_solicitud" class="form-control" required>
               <option value="" disabled>Seleccione tipo...</option>
@@ -70,7 +70,7 @@ import { authState } from '../store/auth'
 const props = defineProps({
   departamentoDestino: {
     type: String,
-    default: 'BI'
+    default: 'DATA'
   }
 })
 
@@ -85,7 +85,7 @@ const form = reactive({
   departamento: '',
   contacto: '',
   asunto: '',
-  tipo_solicitud: props.departamentoDestino === 'BI' ? '' : null,
+  tipo_solicitud: props.departamentoDestino === 'DATA' ? '' : null,
   descripcion: ''
 })
 
@@ -96,9 +96,9 @@ onMounted(async () => {
     if (authState.user.departamento) form.departamento = authState.user.departamento
   }
 
-  if (props.departamentoDestino === 'BI') {
+  if (props.departamentoDestino === 'DATA') {
     try {
-      const list = await categoriaService.getCategorias('BI')
+      const list = await categoriaService.getCategorias('DATA')
       opcionesTipoSolicitud.value = list.map(c => c.nombre)
     } catch (err) {
       console.error('Error al cargar categorías de Data:', err)
@@ -125,7 +125,7 @@ const submitForm = async () => {
       departamento: form.departamento,
       asunto: form.asunto,
       descripcion: form.descripcion,
-      tipo_solicitud: props.departamentoDestino === 'BI' ? form.tipo_solicitud : null,
+      tipo_solicitud: props.departamentoDestino === 'DATA' ? form.tipo_solicitud : null,
       detalles_adicionales
     }
 

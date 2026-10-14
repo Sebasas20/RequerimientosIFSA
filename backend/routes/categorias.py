@@ -17,7 +17,7 @@ def get_categorias(current_user):
     else:
         # De lo contrario, si es administrador de área sin filtro explícito, restringir a su departamento
         if current_user.role == 'Admin Data':
-            query = query.filter_by(departamento_destino='BI')
+            query = query.filter_by(departamento_destino='DATA')
         elif current_user.role == 'Admin HelpDesk':
             query = query.filter_by(departamento_destino='HELPDESK')
 
@@ -37,14 +37,14 @@ def create_categoria(current_user):
 
     # Determinación del departamento destino
     if current_user.role == 'Admin Data':
-        departamento_destino = 'BI'
+        departamento_destino = 'DATA'
     elif current_user.role == 'Admin HelpDesk':
         departamento_destino = 'HELPDESK'
     else:
         departamento_destino = data.get('departamento_destino', '').strip()
 
-    if departamento_destino not in ['BI', 'HELPDESK']:
-        return jsonify({'error': 'Debe especificar un departamento destino válido (BI o HELPDESK)'}), 400
+    if departamento_destino not in ['DATA', 'HELPDESK']:
+        return jsonify({'error': 'Debe especificar un departamento destino válido (DATA o HELPDESK)'}), 400
 
     # Validar duplicados en el mismo departamento
     existing = Categoria.query.filter_by(nombre=nombre, departamento_destino=departamento_destino).first()
@@ -71,7 +71,7 @@ def delete_categoria(current_user, id):
         return jsonify({'error': 'Categoría no encontrada'}), 404
 
     # Restricción por área
-    if current_user.role == 'Admin Data' and categoria.departamento_destino != 'BI':
+    if current_user.role == 'Admin Data' and categoria.departamento_destino != 'DATA':
         return jsonify({'error': 'No tiene permisos para eliminar categorías de otro departamento'}), 403
     if current_user.role == 'Admin HelpDesk' and categoria.departamento_destino != 'HELPDESK':
         return jsonify({'error': 'No tiene permisos para eliminar categorías de otro departamento'}), 403

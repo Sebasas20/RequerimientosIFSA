@@ -58,8 +58,8 @@
         <button 
           v-if="!isArturosUser"
           class="tab-btn" 
-          :class="{ active: filterDeptoDestino === 'BI' }" 
-          @click="selectDeptoDestino('BI')">
+          :class="{ active: filterDeptoDestino === 'DATA' }" 
+          @click="selectDeptoDestino('DATA')">
           📊 Requerimientos Data
         </button>
         <button 
@@ -291,7 +291,7 @@ const isArturosUser = computed(() => authState.user?.role === 'Usuario Arturos')
 
 onMounted(() => {
   if (authState.isAdminData) {
-    filterDeptoDestino.value = 'BI'
+    filterDeptoDestino.value = 'DATA'
   } else if (authState.isAdminHelpDesk || isArturosUser.value) {
     filterDeptoDestino.value = 'HELPDESK'
   }
