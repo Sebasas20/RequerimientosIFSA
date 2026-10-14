@@ -1,11 +1,12 @@
 from backend.models.ticket import db
 from datetime import datetime
 import uuid
+from sqlalchemy.dialects.postgresql import UUID
 
 class User(db.Model):
     __tablename__ = 'requirement_users'
 
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4()))
     full_name = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
     hashed_password = db.Column(db.String(255), nullable=False)
@@ -17,7 +18,7 @@ class User(db.Model):
 
     def to_dict(self):
         return {
-            'id': self.id,
+            'id': str(self.id),
             'full_name': self.full_name,
             'email': self.email,
             'role': self.role,

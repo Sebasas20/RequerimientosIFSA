@@ -44,7 +44,7 @@ def get_tickets(current_user):
             query = query.filter(db.or_(
                 Ticket.nombre_solicitante.ilike(search_term),
                 Ticket.asunto.ilike(search_term),
-                Ticket.id.ilike(search_term)
+                db.cast(Ticket.id, db.String).ilike(search_term)
             ))
 
         tickets = query.order_by(Ticket.created_at.desc()).all()
