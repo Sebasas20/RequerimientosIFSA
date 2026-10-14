@@ -6,7 +6,10 @@ env_path = Path(__file__).parent / '.env'
 load_dotenv(dotenv_path=env_path)
 
 class Config:
-    SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
+    _db_url = os.environ.get('DATABASE_URL', '').strip('"\'')
+    if _db_url.startswith('postgres://'):
+        _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+    SQLALCHEMY_DATABASE_URI = _db_url
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
