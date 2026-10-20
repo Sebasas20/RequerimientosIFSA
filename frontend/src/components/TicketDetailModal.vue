@@ -10,8 +10,8 @@
         <div class="ticket-details">
           <div class="detail-row">
             <span class="label">Área:</span>
-            <span :class="ticket.departamento_destino === 'HELPDESK' ? 'badge badge-info' : 'badge badge-secondary'">
-              {{ ticket.departamento_destino === 'HELPDESK' ? 'HELPDESK' : 'DATA' }}
+            <span :class="getAreaBadgeClass(ticket.departamento_destino)">
+              {{ formatAreaBadge(ticket.departamento_destino) }}
             </span>
             <span class="label" style="margin-left: 0.5rem;">Estado:</span>
             <span :class="getBadgeClass(ticket.estado)">{{ ticket.estado }}</span>
@@ -22,8 +22,9 @@
           <p><strong>Correo Creador:</strong> {{ ticket.creator_email || 'No asociado' }}</p>
           <p><strong>Empresa / Depto:</strong> {{ ticket.empresa }} - {{ ticket.departamento }}</p>
           <p v-if="ticket.tipo_solicitud"><strong>Tipo de Solicitud / Clasificación:</strong> {{ ticket.tipo_solicitud }}</p>
+          <p v-if="ticket.detalles_adicionales?.medidas"><strong>Medidas (Si Aplica):</strong> {{ ticket.detalles_adicionales.medidas }}</p>
           <p><strong>Prioridad:</strong> {{ ticket.prioridad || 'No asignada' }}</p>
-          <p><strong>Encargado / Técnico:</strong> {{ ticket.encargado || 'Sin asignar' }}</p>
+          <p v-if="ticket.departamento_destino !== 'TRADE'"><strong>Encargado / Técnico:</strong> {{ ticket.encargado || 'Sin asignar' }}</p>
           
           <div class="description-box">
             <strong>Descripción original:</strong>
@@ -56,6 +57,18 @@ const props = defineProps({
   ticket: Object
 })
 defineEmits(['close'])
+
+const formatAreaBadge = (depto) => {
+  if (depto === 'HELPDESK') return 'HELPDESK'
+  if (depto === 'TRADE') return 'TRADE'
+  return 'DATA'
+}
+
+const getAreaBadgeClass = (depto) => {
+  if (depto === 'HELPDESK') return 'badge badge-info'
+  if (depto === 'TRADE') return 'badge badge-trade'
+  return 'badge badge-secondary'
+}
 
 const getBadgeClass = (estado) => {
   switch(estado) {

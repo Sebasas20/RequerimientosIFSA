@@ -250,6 +250,7 @@ body {
 .badge-danger { background-color: rgba(220,53,69,0.2); color: #842029; }
 .badge-info { background-color: rgba(13,202,240,0.2); color: #055160; }
 .badge-secondary { background-color: rgba(108,117,125,0.2); color: #41464b; }
+.badge-trade { background-color: rgba(254,80,0,0.15); color: #D14124; }
 
 /* Badge de Estado Prominente para el Dashboard */
 .badge-status {

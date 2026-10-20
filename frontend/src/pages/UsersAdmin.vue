@@ -99,6 +99,7 @@
                 <option value="Administrador">Administrador (Super Admin)</option>
                 <option value="Admin Data">Admin Data</option>
                 <option value="Admin HelpDesk">Admin HelpDesk</option>
+                <option value="Admin Trade">Admin Trade</option>
               </select>
             </div>
           </div>
@@ -160,7 +161,7 @@ const formatDate = (dateString) => {
 }
 
 const getRoleBadgeClass = (role) => {
-  if (role === 'Administrador' || role === 'Admin Data' || role === 'Admin HelpDesk') {
+  if (['Administrador', 'Admin Data', 'Admin HelpDesk', 'Admin Trade'].includes(role)) {
     return 'badge'
   }
   return 'badge badge-secondary'
@@ -169,6 +170,9 @@ const getRoleBadgeClass = (role) => {
 const getRoleBadgeStyle = (role) => {
   if (role === 'Administrador') {
     return { backgroundColor: '#A48452', color: '#FFFFFF' }
+  }
+  if (role === 'Admin Trade') {
+    return { backgroundColor: '#FE5000', color: '#FFFFFF' }
   }
   if (role === 'Admin Data' || role === 'Admin HelpDesk') {
     return { backgroundColor: '#1C1C34', color: '#FFFFFF' }

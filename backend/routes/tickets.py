@@ -20,8 +20,15 @@ def get_tickets(current_user):
             query = query.filter(Ticket.departamento_destino == 'DATA')
         elif current_user.role == 'Admin HelpDesk':
             query = query.filter(Ticket.departamento_destino == 'HELPDESK')
+        elif current_user.role == 'Admin Trade':
+            query = query.filter(Ticket.departamento_destino == 'TRADE')
         else:
             query = query.filter(Ticket.creator_email == current_user.email)
+            if current_user.role == 'Usuario Arturos':
+                query = query.filter(Ticket.departamento_destino.in_(['HELPDESK', 'TRADE']))
+            elif current_user.role in ['Usuario IFSA', 'Usuario']:
+                query = query.filter(Ticket.departamento_destino.in_(['DATA', 'HELPDESK']))
+
             depto_destino = request.args.get('departamento_destino')
             if depto_destino:
                 query = query.filter(Ticket.departamento_destino == depto_destino)
@@ -65,10 +72,15 @@ def create_ticket(current_user):
                 return jsonify({"error": f"El campo {field} es requerido"}), 400
 
         depto_destino = data.get('departamento_destino', 'DATA')
+        if depto_destino not in ['DATA', 'HELPDESK', 'TRADE']:
+            return jsonify({"error": "Departamento destino inválido"}), 400
         
-        # Restricción para Usuario Arturos: Solo permite solicitudes a HelpDesk
+        # Restricciones por tipo de usuario
         if current_user.role == 'Usuario Arturos' and depto_destino == 'DATA':
-            return jsonify({"error": "Los usuarios de Arturos solo pueden realizar solicitudes al departamento de HelpDesk"}), 403
+            return jsonify({"error": "Los usuarios de Arturos solo pueden realizar solicitudes a HelpDesk o Trade Marketing"}), 403
+
+        if current_user.role in ['Usuario IFSA', 'Usuario'] and depto_destino == 'TRADE':
+            return jsonify({"error": "Los usuarios de IFSA no tienen acceso a solicitudes de Trade Marketing"}), 403
 
         asunto = data.get('asunto') or data['descripcion'][:60]
         
@@ -77,9 +89,9 @@ def create_ticket(current_user):
             detalles_adicionales = {}
 
         tipo_solicitud = data.get('tipo_solicitud')
-        if depto_destino == 'DATA':
+        if depto_destino in ['DATA', 'TRADE']:
             if not tipo_solicitud:
-                return jsonify({"error": "El campo tipo_solicitud es requerido para Requerimientos Data"}), 400
+                return jsonify({"error": f"El campo tipo_solicitud es requerido para {depto_destino}"}), 400
 
         new_ticket = Ticket(
             departamento_destino=depto_destino,
@@ -115,6 +127,9 @@ def update_ticket(current_user, ticket_id):
             return jsonify({"error": "Acceso denegado: No tiene permisos para gestionar tickets de esta área"}), 403
 
         if current_user.role == 'Admin HelpDesk' and ticket.departamento_destino != 'HELPDESK':
+            return jsonify({"error": "Acceso denegado: No tiene permisos para gestionar tickets de esta área"}), 403
+
+        if current_user.role == 'Admin Trade' and ticket.departamento_destino != 'TRADE':
             return jsonify({"error": "Acceso denegado: No tiene permisos para gestionar tickets de esta área"}), 403
             
         data = sanitize_input(request.get_json())

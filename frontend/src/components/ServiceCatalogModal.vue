@@ -8,9 +8,9 @@
       <p class="catalog-subtitle">Selecciona el área encargada de atender tu solicitud:</p>
 
       <div class="catalog-grid">
-        <!-- Tarjeta DATA (Oculta si es Usuario Arturos) -->
+        <!-- Tarjeta DATA (Oculta si es Usuario Arturos o Admin Trade) -->
         <div 
-          v-if="!isArturosUser"
+          v-if="canAccessData"
           class="service-card" 
           @click="$emit('select-service', 'DATA')">
           <div class="service-icon">📊</div>
@@ -30,6 +30,19 @@
           </div>
           <span class="btn-select">Crear Ticket HelpDesk &rarr;</span>
         </div>
+
+        <!-- Tarjeta Trade Marketing (Exclusivo para Usuario Arturos, Admin Trade y Super Admin) -->
+        <div 
+          v-if="canAccessTrade"
+          class="service-card" 
+          @click="$emit('select-service', 'TRADE')">
+          <div class="service-icon">📢</div>
+          <div class="service-content">
+            <h3>Trade Marketing</h3>
+            <p>Solicitudes de fachada interna, fachada externa, material POP, vallas publicitarias y requerimientos de marca.</p>
+          </div>
+          <span class="btn-select">Crear Solicitud Trade &rarr;</span>
+        </div>
       </div>
     </div>
   </div>
@@ -47,7 +60,8 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'select-service'])
 
-const isArturosUser = computed(() => props.userRole === 'Usuario Arturos')
+const canAccessData = computed(() => !['Usuario Arturos', 'Admin Trade'].includes(props.userRole))
+const canAccessTrade = computed(() => ['Usuario Arturos', 'Administrador', 'Admin Trade'].includes(props.userRole))
 </script>
 
 <style scoped>
@@ -59,7 +73,7 @@ const isArturosUser = computed(() => props.userRole === 'Usuario Arturos')
   z-index: 1000;
 }
 .catalog-modal {
-  width: 90%; max-width: 700px; padding: 2rem; border-radius: 16px;
+  width: 90%; max-width: 920px; padding: 2rem; border-radius: 16px;
 }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
 .modal-header h2 { margin: 0; font-size: 1.35rem; color: var(--text-main); }

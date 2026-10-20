@@ -1,0 +1,106 @@
+[
+  {
+    "departamento": "DATA",
+    "descripcion": "Creación de dashboards, análisis profundo, modelos de ML, troubleshooting de datos y reportes.",
+    "campos_requeridos": [
+      {
+        "nombre_campo": "Asunto",
+        "columna_correspondiente": "asunto",
+        "tipo_dato": "character varying (255)",
+        "obligatorio": true,
+        "descripcion": "Breve descripción de la solicitud a manera de título/asunto."
+      },
+      {
+        "nombre_campo": "Descripción",
+        "columna_correspondiente": "descripcion",
+        "tipo_dato": "text",
+        "obligatorio": true,
+        "descripcion": "Información detallada y relevante del requerimiento o solicitud."
+      },
+      {
+        "nombre_campo": "Solicitud",
+        "columna_correspondiente": "tipo_solicitud",
+        "tipo_dato": "character varying (255)",
+        "obligatorio": true,
+        "descripcion": "Tipo de solicitud o caso correspondiente al Ticket. Solo se admite la lista de opciones válidas",
+        "opciones_validas": [
+            "Análisis profundo",
+            "Creación de Dashboards",
+            "Modelos Estadísticos/ML",
+            "Troubleshooting",
+            "Otros requerimientos"
+        ]
+      }
+    ]
+  },
+
+  {
+    "departamento": "HELPDESK",
+    "descripcion": "Asistencia con impresoras fiscales, merchant, odoo, hardware, red, biométrico o POS en tienda y oficina.",
+    "campos_requeridos": [
+      {
+        "nombre_campo": "Contacto",
+        "columna_correspondiente": "detalles_adicionales",
+        "tipo_dato": "jsonb/string",
+        "obligatorio": true,
+        "descripcion": "Contacto inmediato del solicitante para el encargado como correo corporativo o número de teléfono."
+      },
+      {
+        "nombre_campo": "Asunto",
+        "columna_correspondiente": "asunto",
+        "tipo_dato": "character varying (255)",
+        "obligatorio": true,
+        "descripcion": "Breve descripción de la solicitud a manera de título/asunto."
+      },
+      {
+        "nombre_campo": "Descripción",
+        "columna_correspondiente": "descripcion",
+        "tipo_dato": "text",
+        "obligatorio": true,
+        "descripcion": "Información detallada y relevante del requerimiento o solicitud."
+      }
+    ]
+  },
+
+  {
+    "departamento": "TRADE",
+    "descripcion": "Solicitudes de fachada interna, fachada externa, material POP, vallas publicitarias y requerimientos de marca.",
+    "campos_requeridos": [
+      {
+        "nombre_campo": "Medidas (Si Aplica)",
+        "columna_correspondiente": "detalles_adicionales",
+        "tipo_dato": "jsonb/string",
+        "obligatorio": false,
+        "descripcion": "Medidas de referencia para ser tomadas en cuenta según el tipo de solicitud en caso de aplicar."
+      },
+      {
+        "nombre_campo": "Asunto",
+        "columna_correspondiente": "asunto",
+        "tipo_dato": "character varying (255)",
+        "obligatorio": true,
+        "descripcion": "Breve descripción de la solicitud a manera de título/asunto."
+      },
+      {
+        "nombre_campo": "Descripción",
+        "columna_correspondiente": "descripcion",
+        "tipo_dato": "text",
+        "obligatorio": true,
+        "descripcion": "Información detallada y relevante del requerimiento o solicitud."
+      },
+      {
+        "nombre_campo": "Solicitud",
+        "columna_correspondiente": "tipo_solicitud",
+        "tipo_dato": "character varying (255)",
+        "obligatorio": true,
+        "descripcion": "Tipo de solicitud o caso correspondiente al Ticket. Solo se admite la lista de opciones válidas",
+        "opciones_validas": [
+            "Fachada Externa",
+            "Fachada Interna",
+            "Material POP",
+            "Vallas",
+            "Otros"
+        ]
+      }
+    ]
+  }
+]

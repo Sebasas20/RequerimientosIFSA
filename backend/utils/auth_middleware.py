@@ -45,7 +45,7 @@ def admin_required(f):
 def ticket_admin_required(f):
     @wraps(f)
     def decorated(current_user, *args, **kwargs):
-        if current_user.role not in ['Administrador', 'Admin Data', 'Admin HelpDesk']:
+        if current_user.role not in ['Administrador', 'Admin Data', 'Admin HelpDesk', 'Admin Trade']:
             return jsonify({'error': 'Acceso denegado: Se requieren permisos de administración de tickets'}), 403
         return f(current_user, *args, **kwargs)
     return decorated

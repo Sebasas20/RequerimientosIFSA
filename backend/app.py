@@ -25,8 +25,33 @@ def ensure_enum_values():
                 db.session.commit()
             except Exception:
                 db.session.rollback()
+
+        role_values = ['Admin Data', 'Admin HelpDesk', 'Admin Trade']
+        for rval in role_values:
+            try:
+                db.session.execute(db.text(f"ALTER TYPE user_role ADD VALUE IF NOT EXISTS '{rval}';"))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
     except Exception:
         pass
+
+def ensure_trade_categories():
+    try:
+        trade_categories = [
+            'Fachada Interna',
+            'Fachada Externa',
+            'Material POP',
+            'Vallas',
+            'Otros'
+        ]
+        for nombre in trade_categories:
+            existing = Categoria.query.filter_by(nombre=nombre, departamento_destino='TRADE').first()
+            if not existing:
+                db.session.add(Categoria(nombre=nombre, departamento_destino='TRADE'))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 def create_app():
     app = Flask(__name__)
@@ -39,8 +64,12 @@ def create_app():
     db.init_app(app)
 
     with app.app_context():
-        db.create_all()
-        ensure_enum_values()
+        try:
+            db.create_all()
+            ensure_enum_values()
+            ensure_trade_categories()
+        except Exception as e:
+            print(f"Advertencia al inicializar BD en el arranque: {e}")
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(users_bp, url_prefix='/api/users')

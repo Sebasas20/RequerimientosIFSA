@@ -20,6 +20,8 @@ def get_categorias(current_user):
             query = query.filter_by(departamento_destino='DATA')
         elif current_user.role == 'Admin HelpDesk':
             query = query.filter_by(departamento_destino='HELPDESK')
+        elif current_user.role == 'Admin Trade':
+            query = query.filter_by(departamento_destino='TRADE')
 
     categorias = query.order_by(Categoria.nombre.asc()).all()
     return jsonify([c.to_dict() for c in categorias]), 200
@@ -40,11 +42,13 @@ def create_categoria(current_user):
         departamento_destino = 'DATA'
     elif current_user.role == 'Admin HelpDesk':
         departamento_destino = 'HELPDESK'
+    elif current_user.role == 'Admin Trade':
+        departamento_destino = 'TRADE'
     else:
         departamento_destino = data.get('departamento_destino', '').strip()
 
-    if departamento_destino not in ['DATA', 'HELPDESK']:
-        return jsonify({'error': 'Debe especificar un departamento destino válido (DATA o HELPDESK)'}), 400
+    if departamento_destino not in ['DATA', 'HELPDESK', 'TRADE']:
+        return jsonify({'error': 'Debe especificar un departamento destino válido (DATA, HELPDESK o TRADE)'}), 400
 
     # Validar duplicados en el mismo departamento
     existing = Categoria.query.filter_by(nombre=nombre, departamento_destino=departamento_destino).first()
@@ -74,6 +78,8 @@ def delete_categoria(current_user, id):
     if current_user.role == 'Admin Data' and categoria.departamento_destino != 'DATA':
         return jsonify({'error': 'No tiene permisos para eliminar categorías de otro departamento'}), 403
     if current_user.role == 'Admin HelpDesk' and categoria.departamento_destino != 'HELPDESK':
+        return jsonify({'error': 'No tiene permisos para eliminar categorías de otro departamento'}), 403
+    if current_user.role == 'Admin Trade' and categoria.departamento_destino != 'TRADE':
         return jsonify({'error': 'No tiene permisos para eliminar categorías de otro departamento'}), 403
 
     db.session.delete(categoria)

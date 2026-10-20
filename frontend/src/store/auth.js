@@ -64,7 +64,7 @@ export const authState = reactive({
   },
   
   get canManageTickets() {
-    return this.user && ['Administrador', 'Admin Data', 'Admin HelpDesk'].includes(this.user.role)
+    return this.user && ['Administrador', 'Admin Data', 'Admin HelpDesk', 'Admin Trade'].includes(this.user.role)
   },
 
   get isAdminData() {
@@ -75,8 +75,16 @@ export const authState = reactive({
     return this.user && this.user.role === 'Admin HelpDesk'
   },
 
+  get isAdminTrade() {
+    return this.user && this.user.role === 'Admin Trade'
+  },
+
   get isAreaAdmin() {
-    return this.user && ['Admin Data', 'Admin HelpDesk'].includes(this.user.role)
+    return this.user && ['Admin Data', 'Admin HelpDesk', 'Admin Trade'].includes(this.user.role)
+  },
+
+  get isArturosTheme() {
+    return this.user && ['Usuario Arturos', 'Admin Trade'].includes(this.user.role)
   },
   
   login(tokenData, userData) {

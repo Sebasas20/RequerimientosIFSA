@@ -2,7 +2,7 @@
   <div class="modal-overlay" @click.self="$emit('close')">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>{{ departamentoDestino === 'HELPDESK' ? 'Nuevo Ticket - HelpDesk / Soporte TI' : 'Nueva Solicitud - Requerimientos Data' }}</h2>
+        <h2>{{ modalTitle }}</h2>
         <button class="close-btn" @click="$emit('close')">&times;</button>
       </div>
       
@@ -34,13 +34,19 @@
             <input type="text" v-model="form.asunto" class="form-control" placeholder="Resumen corto de la solicitud o falla" required />
           </div>
 
-          <!-- Solo para DATA: Tipo de solicitud dinámico -->
-          <div v-if="departamentoDestino === 'DATA'" class="form-group">
-            <label>Tipo de Solicitud Data</label>
+          <!-- Para DATA y TRADE: Tipo de solicitud dinámico -->
+          <div v-if="departamentoDestino === 'DATA' || departamentoDestino === 'TRADE'" class="form-group">
+            <label>{{ departamentoDestino === 'TRADE' ? 'Tipo de Solicitud' : 'Tipo de Solicitud Data' }}</label>
             <select v-model="form.tipo_solicitud" class="form-control" required>
               <option value="" disabled>Seleccione tipo...</option>
               <option v-for="tipo in opcionesTipoSolicitud" :key="tipo" :value="tipo">{{ tipo }}</option>
             </select>
+          </div>
+
+          <!-- Solo para TRADE: Medidas (Si Aplica) -->
+          <div v-if="departamentoDestino === 'TRADE'" class="form-group">
+            <label>Medidas (Si Aplica)</label>
+            <input type="text" v-model="form.medidas" class="form-control" placeholder="Ej: 2m x 1.5m (Opcional)" />
           </div>
 
           <div class="form-group">
@@ -63,7 +69,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ticketService, categoriaService } from '../services/api'
 import { authState } from '../store/auth'
 
@@ -76,6 +82,12 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'ticket-created'])
 
+const modalTitle = computed(() => {
+  if (props.departamentoDestino === 'HELPDESK') return 'Nuevo Ticket - HelpDesk / Soporte TI'
+  if (props.departamentoDestino === 'TRADE') return 'Nueva Solicitud - Trade Marketing'
+  return 'Nueva Solicitud - Requerimientos Data'
+})
+
 const opcionesTipoSolicitud = ref([])
 
 const form = reactive({
@@ -84,8 +96,9 @@ const form = reactive({
   empresa: '',
   departamento: '',
   contacto: '',
+  medidas: '',
   asunto: '',
-  tipo_solicitud: props.departamentoDestino === 'DATA' ? '' : null,
+  tipo_solicitud: ['DATA', 'TRADE'].includes(props.departamentoDestino) ? '' : null,
   descripcion: ''
 })
 
@@ -96,12 +109,19 @@ onMounted(async () => {
     if (authState.user.departamento) form.departamento = authState.user.departamento
   }
 
-  if (props.departamentoDestino === 'DATA') {
+  if (props.departamentoDestino === 'DATA' || props.departamentoDestino === 'TRADE') {
     try {
-      const list = await categoriaService.getCategorias('DATA')
-      opcionesTipoSolicitud.value = list.map(c => c.nombre)
+      const list = await categoriaService.getCategorias(props.departamentoDestino)
+      if (list && list.length > 0) {
+        opcionesTipoSolicitud.value = list.map(c => c.nombre)
+      } else if (props.departamentoDestino === 'TRADE') {
+        opcionesTipoSolicitud.value = ['Fachada Interna', 'Fachada Externa', 'Material POP', 'Vallas', 'Otros']
+      }
     } catch (err) {
-      console.error('Error al cargar categorías de Data:', err)
+      console.error(`Error al cargar categorías de ${props.departamentoDestino}:`, err)
+      if (props.departamentoDestino === 'TRADE') {
+        opcionesTipoSolicitud.value = ['Fachada Interna', 'Fachada Externa', 'Material POP', 'Vallas', 'Otros']
+      }
     }
   }
 })
@@ -117,6 +137,9 @@ const submitForm = async () => {
     if (props.departamentoDestino === 'HELPDESK' && form.contacto) {
       detalles_adicionales.contacto = form.contacto
     }
+    if (props.departamentoDestino === 'TRADE' && form.medidas && form.medidas.trim() !== '') {
+      detalles_adicionales.medidas = form.medidas.trim()
+    }
 
     const payload = {
       departamento_destino: props.departamentoDestino,
@@ -125,7 +148,7 @@ const submitForm = async () => {
       departamento: form.departamento,
       asunto: form.asunto,
       descripcion: form.descripcion,
-      tipo_solicitud: props.departamentoDestino === 'DATA' ? form.tipo_solicitud : null,
+      tipo_solicitud: ['DATA', 'TRADE'].includes(props.departamentoDestino) ? form.tipo_solicitud : null,
       detalles_adicionales
     }
 

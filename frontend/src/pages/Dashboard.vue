@@ -28,7 +28,7 @@
           <div class="stat-value" style="color: var(--secondary-color);">{{ kpiStats.pausados }}</div>
           <div class="stat-label">Pausados</div>
         </div>
-        <div class="stat-card">
+        <div v-if="!authState.isAdminTrade && filterDeptoDestino !== 'TRADE'" class="stat-card">
           <div class="stat-value" style="color: var(--warning-color);">{{ kpiStats.sinEncargado }}</div>
           <div class="stat-label">Sin Encargado</div>
         </div>
@@ -47,9 +47,11 @@
       <div v-else-if="authState.isAdminHelpDesk" class="depto-tabs">
         <button class="tab-btn active">💻 HelpDesk Soporte TI</button>
       </div>
+      <div v-else-if="authState.isAdminTrade" class="depto-tabs">
+        <button class="tab-btn active">📢 Trade Marketing</button>
+      </div>
       <div v-else class="depto-tabs">
         <button 
-          v-if="!isArturosUser"
           class="tab-btn" 
           :class="{ active: filterDeptoDestino === '' }" 
           @click="selectDeptoDestino('')">
@@ -67,6 +69,13 @@
           :class="{ active: filterDeptoDestino === 'HELPDESK' }" 
           @click="selectDeptoDestino('HELPDESK')">
           💻 HelpDesk Soporte TI
+        </button>
+        <button 
+          v-if="authState.isAdmin || isArturosUser"
+          class="tab-btn" 
+          :class="{ active: filterDeptoDestino === 'TRADE' }" 
+          @click="selectDeptoDestino('TRADE')">
+          📢 Trade Marketing
         </button>
       </div>
     </div>
@@ -105,7 +114,7 @@
             <th>Asunto</th>
             <th>Tipo / Caso</th>
             <th>Prioridad</th>
-            <th v-if="!authState.isAreaAdmin">Encargado</th>
+            <th v-if="showEncargadoCol">Encargado</th>
             <th>Estado</th>
             <th style="text-align: right;">Acciones</th>
           </tr>
@@ -114,7 +123,7 @@
           <tr v-for="ticket in tickets" :key="ticket.id">
             <td :title="ticket.id" style="font-family: monospace; color: var(--text-muted);">#{{ ticket.id.substring(0,8) }}</td>
             <td v-if="!authState.isAreaAdmin">
-              <span :class="ticket.departamento_destino === 'HELPDESK' ? 'badge badge-info' : 'badge badge-secondary'">
+              <span :class="getAreaBadgeClass(ticket.departamento_destino)">
                 {{ formatAreaBadge(ticket.departamento_destino) }}
               </span>
             </td>
@@ -123,7 +132,7 @@
             <td style="font-weight: 500; color: var(--text-main);">{{ ticket.asunto || ticket.descripcion.substring(0,40) }}</td>
             <td>{{ ticket.tipo_solicitud || '-' }}</td>
             <td>{{ ticket.prioridad || '-' }}</td>
-            <td v-if="!authState.isAreaAdmin">{{ ticket.encargado || '-' }}</td>
+            <td v-if="showEncargadoCol">{{ ticket.departamento_destino === 'TRADE' ? '-' : (ticket.encargado || '-') }}</td>
             <td>
               <span :class="getBadgeClass(ticket.estado)">
                 {{ ticket.estado }}
@@ -135,7 +144,7 @@
             </td>
           </tr>
           <tr v-if="tickets.length === 0">
-            <td :colspan="authState.isAreaAdmin ? 8 : 10" class="text-center" style="padding: 3rem; color: var(--text-muted); text-align: center;">No hay tickets que coincidan con la búsqueda.</td>
+            <td :colspan="emptyTableColspan" class="text-center" style="padding: 3rem; color: var(--text-muted); text-align: center;">No hay tickets que coincidan con la búsqueda.</td>
           </tr>
         </tbody>
       </table>
@@ -157,24 +166,7 @@
       </div>
     </div>
 
-    <!-- Modales de Flujo -->
-    <!-- 1. Modal Catálogo de Servicios -->
-    <ServiceCatalogModal 
-      v-if="uiState.showForm && !selectedService" 
-      :userRole="authState.user?.role"
-      @close="uiState.showForm = false" 
-      @select-service="handleSelectService" 
-    />
-
-    <!-- 2. Modal Formulario de Ticket Adaptativo -->
-    <TicketForm 
-      v-if="uiState.showForm && selectedService" 
-      :departamentoDestino="selectedService"
-      @close="resetFormState" 
-      @ticket-created="handleTicketCreated" 
-    />
-
-    <!-- 3. Modales de Gestión / Detalle -->
+    <!-- Modales de Gestión / Detalle -->
     <TicketAdminModal v-if="selectedTicket && authState.canManageTickets" :ticket="selectedTicket" @close="selectedTicket = null" @ticket-updated="fetchTickets" />
     <TicketDetailModal v-if="selectedTicketDetail && !authState.canManageTickets" :ticket="selectedTicketDetail" @close="selectedTicketDetail = null" />
   </div>
@@ -183,8 +175,6 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { ticketService } from '../services/api'
-import ServiceCatalogModal from '../components/ServiceCatalogModal.vue'
-import TicketForm from '../components/TicketForm.vue'
 import TicketAdminModal from '../components/TicketAdminModal.vue'
 import TicketDetailModal from '../components/TicketDetailModal.vue'
 import TicketCard from '../components/TicketCard.vue'
@@ -194,7 +184,6 @@ import { authState } from '../store/auth'
 const tickets = ref([])
 const selectedTicket = ref(null)
 const selectedTicketDetail = ref(null)
-const selectedService = ref(null)
 const searchQuery = ref('')
 const filterEstado = ref('')
 const filterDeptoDestino = ref('')
@@ -206,9 +195,20 @@ const kpiStats = computed(() => {
     enDesarrollo: tickets.value.filter(t => t.estado === 'Asignado/Desarrollo' || t.estado === 'Asignado / En progreso').length,
     prioridad1: tickets.value.filter(t => t.prioridad === 'Prioridad 1').length,
     pausados: tickets.value.filter(t => t.estado === 'Pausado').length,
-    sinEncargado: tickets.value.filter(t => !t.encargado || t.encargado.trim() === '' || t.encargado.toLowerCase() === 'sin asignar').length,
+    sinEncargado: tickets.value.filter(t => t.departamento_destino !== 'TRADE' && (!t.encargado || t.encargado.trim() === '' || t.encargado.toLowerCase() === 'sin asignar')).length,
     nuevos: tickets.value.filter(t => t.estado === 'Creado / Esperando Asignación').length
   }
+})
+
+const showEncargadoCol = computed(() => {
+  return !authState.isAreaAdmin && filterDeptoDestino.value !== 'TRADE'
+})
+
+const emptyTableColspan = computed(() => {
+  let cols = 8
+  if (!authState.isAreaAdmin) cols += 1
+  if (showEncargadoCol.value) cols += 1
+  return cols
 })
 
 const fetchTickets = async () => {
@@ -228,15 +228,6 @@ const selectDeptoDestino = (depto) => {
   fetchTickets()
 }
 
-const handleSelectService = (service) => {
-  selectedService.value = service
-}
-
-const resetFormState = () => {
-  uiState.showForm = false
-  selectedService.value = null
-}
-
 const debounceSearch = () => {
   if (searchTimeout) clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
@@ -251,17 +242,6 @@ const openAdminModal = (ticket) => {
 const openDetailModal = (ticket) => {
   selectedTicketDetail.value = ticket
 }
-
-const handleTicketCreated = () => {
-  resetFormState()
-  fetchTickets()
-}
-
-watch(() => uiState.showForm, (newVal) => {
-  if (!newVal) {
-    selectedService.value = null
-  }
-})
 
 watch(() => uiState.triggerRefresh, () => {
   fetchTickets()
@@ -285,15 +265,27 @@ const getBadgeClass = (estado) => {
   }
 }
 
-const formatAreaBadge = (depto) => (depto === 'HELPDESK' ? 'HELPDESK' : 'DATA')
+const formatAreaBadge = (depto) => {
+  if (depto === 'HELPDESK') return 'HELPDESK'
+  if (depto === 'TRADE') return 'TRADE'
+  return 'DATA'
+}
+
+const getAreaBadgeClass = (depto) => {
+  if (depto === 'HELPDESK') return 'badge badge-info'
+  if (depto === 'TRADE') return 'badge badge-trade'
+  return 'badge badge-secondary'
+}
 
 const isArturosUser = computed(() => authState.user?.role === 'Usuario Arturos')
 
 onMounted(() => {
   if (authState.isAdminData) {
     filterDeptoDestino.value = 'DATA'
-  } else if (authState.isAdminHelpDesk || isArturosUser.value) {
+  } else if (authState.isAdminHelpDesk) {
     filterDeptoDestino.value = 'HELPDESK'
+  } else if (authState.isAdminTrade) {
+    filterDeptoDestino.value = 'TRADE'
   }
   fetchTickets()
 })

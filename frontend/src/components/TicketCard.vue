@@ -4,8 +4,8 @@
     <div class="card-header">
       <div class="header-left">
         <span class="ticket-id" :title="ticket.id">#{{ ticket.id.substring(0, 8) }}</span>
-        <span v-if="!isAreaAdmin" :class="ticket.departamento_destino === 'HELPDESK' ? 'badge badge-info' : 'badge badge-secondary'">
-          {{ ticket.departamento_destino === 'HELPDESK' ? 'HELPDESK' : 'DATA' }}
+        <span v-if="!isAreaAdmin" :class="getAreaBadgeClass(ticket.departamento_destino)">
+          {{ formatAreaBadge(ticket.departamento_destino) }}
         </span>
       </div>
       <div class="header-right">
@@ -35,7 +35,7 @@
           <span class="meta-icon">📌</span>
           <span class="meta-text">{{ ticket.tipo_solicitud }}</span>
         </div>
-        <div class="meta-row" v-if="!isAreaAdmin && ticket.encargado">
+        <div class="meta-row" v-if="!isAreaAdmin && ticket.departamento_destino !== 'TRADE' && ticket.encargado">
           <span class="meta-icon">🛠️</span>
           <span class="meta-text">Encargado: <strong>{{ ticket.encargado }}</strong></span>
         </div>
@@ -71,6 +71,18 @@ const props = defineProps({
 })
 
 defineEmits(['open-admin', 'open-detail'])
+
+const formatAreaBadge = (depto) => {
+  if (depto === 'HELPDESK') return 'HELPDESK'
+  if (depto === 'TRADE') return 'TRADE'
+  return 'DATA'
+}
+
+const getAreaBadgeClass = (depto) => {
+  if (depto === 'HELPDESK') return 'badge badge-info'
+  if (depto === 'TRADE') return 'badge badge-trade'
+  return 'badge badge-secondary'
+}
 
 const getBadgeClass = (estado) => {
   switch(estado) {

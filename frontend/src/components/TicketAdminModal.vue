@@ -9,13 +9,19 @@
       <form @submit.prevent="updateTicket" class="form-wrapper">
         <div class="modal-scroll-body">
           <div class="ticket-details">
-            <p v-if="ticket.departamento_destino !== 'HELPDESK'"><strong>Área Destino:</strong> <span class="badge badge-info">DATA</span></p>
+            <p>
+              <strong>Área Destino:</strong>
+              <span :class="getAreaBadgeClass(ticket.departamento_destino)" style="margin-left: 0.4rem;">
+                {{ formatAreaBadge(ticket.departamento_destino) }}
+              </span>
+            </p>
             <p><strong>Solicitante:</strong> {{ ticket.nombre_solicitante }}</p>
             <p v-if="ticket.detalles_adicionales?.contacto"><strong>Contacto:</strong> {{ ticket.detalles_adicionales.contacto }}</p>
             <p><strong>Correo Creador:</strong> {{ ticket.creator_email || 'No asociado' }}</p>
             <p><strong>Empresa / Depto:</strong> {{ ticket.empresa }} - {{ ticket.departamento }}</p>
             <p><strong>Asunto:</strong> {{ ticket.asunto || ticket.descripcion.substring(0, 50) }}</p>
             <p v-if="ticket.tipo_solicitud"><strong>Tipo Solicitud:</strong> {{ ticket.tipo_solicitud }}</p>
+            <p v-if="ticket.detalles_adicionales?.medidas"><strong>Medidas (Si Aplica):</strong> {{ ticket.detalles_adicionales.medidas }}</p>
             <p><strong>Descripción:</strong> {{ ticket.descripcion }}</p>
           </div>
           
@@ -32,8 +38,8 @@
             </select>
           </div>
           
-          <!-- Desplegable dinámico de encargados según el departamento del ticket -->
-          <div class="form-group">
+          <!-- Desplegable dinámico de encargados según el departamento del ticket (Omitido para TRADE) -->
+          <div class="form-group" v-if="ticket.departamento_destino !== 'TRADE'">
             <label>Encargado / Técnico</label>
             <select v-model="form.encargado" class="form-control">
               <option value="">Sin asignar / Ninguno</option>
@@ -130,12 +136,26 @@ const opcionesCasoHelpDesk = ref([])
 const loading = ref(false)
 const error = ref('')
 
+const formatAreaBadge = (depto) => {
+  if (depto === 'HELPDESK') return 'HELPDESK'
+  if (depto === 'TRADE') return 'TRADE'
+  return 'DATA'
+}
+
+const getAreaBadgeClass = (depto) => {
+  if (depto === 'HELPDESK') return 'badge badge-info'
+  if (depto === 'TRADE') return 'badge badge-trade'
+  return 'badge badge-secondary'
+}
+
 onMounted(async () => {
-  try {
-    const listEnc = await encargadoService.getEncargados(props.ticket.departamento_destino || '')
-    encargadosList.value = listEnc
-  } catch (err) {
-    console.error('Error al cargar la lista de encargados:', err)
+  if (props.ticket.departamento_destino !== 'TRADE') {
+    try {
+      const listEnc = await encargadoService.getEncargados(props.ticket.departamento_destino || '')
+      encargadosList.value = listEnc
+    } catch (err) {
+      console.error('Error al cargar la lista de encargados:', err)
+    }
   }
 
   if (props.ticket.departamento_destino === 'HELPDESK') {
@@ -159,9 +179,11 @@ const updateTicket = async () => {
   try {
     const payload = {
       prioridad: form.prioridad,
-      encargado: form.encargado,
       estado: form.estado,
       motivo_justificacion: form.motivo_justificacion
+    }
+    if (props.ticket.departamento_destino !== 'TRADE') {
+      payload.encargado = form.encargado
     }
     if (props.ticket.departamento_destino === 'HELPDESK') {
       payload.tipo_solicitud = form.tipo_solicitud

@@ -16,6 +16,9 @@
       <div v-else-if="authState.isAdminHelpDesk" class="depto-tabs">
         <button class="tab-btn active">💻 HelpDesk Soporte TI</button>
       </div>
+      <div v-else-if="authState.isAdminTrade" class="depto-tabs">
+        <button class="tab-btn active">📢 Trade Marketing</button>
+      </div>
       <div v-else class="depto-tabs">
         <button 
           class="tab-btn" 
@@ -35,6 +38,12 @@
           @click="selectDepto('HELPDESK')">
           💻 HelpDesk Soporte TI
         </button>
+        <button 
+          class="tab-btn" 
+          :class="{ active: filterDepto === 'TRADE' }" 
+          @click="selectDepto('TRADE')">
+          📢 Trade Marketing
+        </button>
       </div>
     </div>
 
@@ -53,8 +62,8 @@
           <tr v-for="categoria in categorias" :key="categoria.id">
             <td style="font-weight: 600; color: var(--text-main);">{{ categoria.nombre }}</td>
             <td>
-              <span :class="categoria.departamento_destino === 'HELPDESK' ? 'badge badge-info' : 'badge badge-secondary'">
-                {{ categoria.departamento_destino === 'HELPDESK' ? 'HELPDESK' : 'DATA' }}
+              <span :class="getAreaBadgeClass(categoria.departamento_destino)">
+                {{ formatAreaBadge(categoria.departamento_destino) }}
               </span>
             </td>
             <td style="font-size: 0.85rem; color: var(--text-muted);">{{ formatDate(categoria.created_at) }}</td>
@@ -78,8 +87,8 @@
       <div v-for="categoria in categorias" :key="categoria.id" class="categoria-card card">
         <div class="categoria-card-header">
           <strong class="categoria-name">{{ categoria.nombre }}</strong>
-          <span :class="categoria.departamento_destino === 'HELPDESK' ? 'badge badge-info' : 'badge badge-secondary'">
-            {{ categoria.departamento_destino === 'HELPDESK' ? 'HELPDESK' : 'DATA' }}
+          <span :class="getAreaBadgeClass(categoria.departamento_destino)">
+            {{ formatAreaBadge(categoria.departamento_destino) }}
           </span>
         </div>
         <div class="categoria-card-footer">
@@ -113,7 +122,7 @@
                 type="text" 
                 v-model="form.nombre" 
                 class="form-control" 
-                placeholder="Ej: Facturación Electrónica / Migración de Datos" 
+                placeholder="Ej: Facturación Electrónica / Material POP" 
                 required 
               />
             </div>
@@ -125,6 +134,7 @@
                 <option value="" disabled>Seleccione departamento...</option>
                 <option value="DATA">📊 Requerimientos Data (DATA)</option>
                 <option value="HELPDESK">💻 HelpDesk Soporte TI (HELPDESK)</option>
+                <option value="TRADE">📢 Trade Marketing (TRADE)</option>
               </select>
             </div>
             <!-- Indicador fijo para Admins de Departamento -->
@@ -132,7 +142,7 @@
               <label>Departamento Destino</label>
               <input 
                 type="text" 
-                :value="authState.isAdminData ? '📊 Requerimientos Data' : '💻 HelpDesk Soporte TI'" 
+                :value="fixedDeptoLabel" 
                 class="form-control" 
                 readonly 
                 style="background-color: #f4f4f6; cursor: not-allowed; font-weight: 600;" 
@@ -174,7 +184,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { categoriaService } from '../services/api'
 import { authState } from '../store/auth'
 
@@ -189,6 +199,24 @@ const form = reactive({
   nombre: '',
   departamento_destino: ''
 })
+
+const fixedDeptoLabel = computed(() => {
+  if (authState.isAdminData) return '📊 Requerimientos Data'
+  if (authState.isAdminTrade) return '📢 Trade Marketing'
+  return '💻 HelpDesk Soporte TI'
+})
+
+const formatAreaBadge = (depto) => {
+  if (depto === 'HELPDESK') return 'HELPDESK'
+  if (depto === 'TRADE') return 'TRADE'
+  return 'DATA'
+}
+
+const getAreaBadgeClass = (depto) => {
+  if (depto === 'HELPDESK') return 'badge badge-info'
+  if (depto === 'TRADE') return 'badge badge-trade'
+  return 'badge badge-secondary'
+}
 
 const fetchCategorias = async () => {
   try {
@@ -210,8 +238,10 @@ const openCreateModal = () => {
     form.departamento_destino = 'DATA'
   } else if (authState.isAdminHelpDesk) {
     form.departamento_destino = 'HELPDESK'
+  } else if (authState.isAdminTrade) {
+    form.departamento_destino = 'TRADE'
   } else {
-    form.departamento_destino = 'HELPDESK'
+    form.departamento_destino = filterDepto.value || 'HELPDESK'
   }
   showForm.value = true
 }
@@ -261,6 +291,8 @@ onMounted(() => {
     filterDepto.value = 'DATA'
   } else if (authState.isAdminHelpDesk) {
     filterDepto.value = 'HELPDESK'
+  } else if (authState.isAdminTrade) {
+    filterDepto.value = 'TRADE'
   }
   fetchCategorias()
 })

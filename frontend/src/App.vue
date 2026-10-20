@@ -7,7 +7,7 @@
       </button>
 
       <div class="mobile-header-brand">
-        <img v-if="authState.user?.role === 'Usuario Arturos'" src="./assets/logo-arturos.png" alt="Arturos" class="mobile-header-logo" />
+        <img v-if="authState.isArturosTheme" src="./assets/logo-arturos.png" alt="Arturos" class="mobile-header-logo" />
         <img v-else src="./assets/logo-grupo-ifsa-1.png" alt="IFSA" class="mobile-header-logo" />
         <span class="mobile-header-title">{{ currentRouteTitle }}</span>
       </div>
@@ -27,7 +27,7 @@
     <!-- Barra Lateral (Desktop Fija / Mobile Drawer Off-Canvas) -->
     <aside class="sidebar" :class="{ open: mobileMenuOpen }">
       <div class="sidebar-logo">
-        <img v-if="authState.user?.role === 'Usuario Arturos'" src="./assets/logo-arturos.png" alt="Arturos Logo" class="arturos-logo" style="filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.3));" />
+        <img v-if="authState.isArturosTheme" src="./assets/logo-arturos.png" alt="Arturos Logo" class="arturos-logo" style="filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.3));" />
         <img v-else src="./assets/logo-grupo-ifsa-1.png" alt="IFSA Logo" />
       </div>
       
@@ -45,7 +45,7 @@
           <span style="font-size: 1.1rem;">🏷️</span> Gestión de Categorías
         </div>
 
-        <div v-if="authState.canManageTickets" class="nav-item" :class="{ active: $route.path === '/encargados' }" @click="navigate('/encargados')">
+        <div v-if="authState.canManageTickets && !authState.isAdminTrade" class="nav-item" :class="{ active: $route.path === '/encargados' }" @click="navigate('/encargados')">
           <span style="font-size: 1.1rem;">🛠️</span> Gestión de Encargados
         </div>
         
@@ -70,6 +70,21 @@
     <main class="main-content">
       <router-view />
     </main>
+
+    <!-- Modales Globales de Nueva Solicitud -->
+    <ServiceCatalogModal 
+      v-if="uiState.showForm && !selectedService" 
+      :userRole="authState.user?.role"
+      @close="resetFormState" 
+      @select-service="handleSelectService" 
+    />
+
+    <TicketForm 
+      v-if="uiState.showForm && selectedService" 
+      :departamentoDestino="selectedService"
+      @close="resetFormState" 
+      @ticket-created="handleTicketCreated" 
+    />
   </div>
   <div v-else>
     <router-view />
@@ -81,11 +96,14 @@ import { ref, computed, watchEffect } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { uiState } from './store/ui'
 import { authState } from './store/auth'
+import ServiceCatalogModal from './components/ServiceCatalogModal.vue'
+import TicketForm from './components/TicketForm.vue'
 
 const router = useRouter()
 const route = useRoute()
 
 const mobileMenuOpen = ref(false)
+const selectedService = ref(null)
 
 const toggleMobileMenu = () => {
   mobileMenuOpen.value = !mobileMenuOpen.value
@@ -102,7 +120,22 @@ const navigate = (path) => {
 
 const handleOpenNewRequest = () => {
   closeMobileMenu()
+  selectedService.value = null
   uiState.showForm = true
+}
+
+const handleSelectService = (service) => {
+  selectedService.value = service
+}
+
+const resetFormState = () => {
+  uiState.showForm = false
+  selectedService.value = null
+}
+
+const handleTicketCreated = () => {
+  resetFormState()
+  uiState.triggerRefresh++
 }
 
 const userInitial = computed(() => {
@@ -119,7 +152,7 @@ const currentRouteTitle = computed(() => {
 
 watchEffect(() => {
   if (authState.isAuthenticated) {
-    if (authState.user?.role === 'Usuario Arturos') {
+    if (authState.isArturosTheme) {
       document.documentElement.setAttribute('data-theme', 'arturos')
     } else {
       document.documentElement.setAttribute('data-theme', 'ifsa')
