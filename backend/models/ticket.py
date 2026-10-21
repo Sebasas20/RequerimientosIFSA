@@ -2,7 +2,7 @@
 from flask_sqlalchemy import SQLAlchemy
 import uuid
 from datetime import datetime
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, ENUM
 
 db = SQLAlchemy()
 
@@ -18,8 +18,8 @@ class Ticket(db.Model):
     descripcion = db.Column(db.Text, nullable=False)
     tipo_solicitud = db.Column(db.String(255), nullable=True)
     detalles_adicionales = db.Column(db.JSON, nullable=True, default=dict)
-    estado = db.Column(db.String(50), nullable=False, default='Creado / Esperando Asignación')
-    prioridad = db.Column(db.String(50), nullable=True)
+    estado = db.Column(ENUM(name='ticket_estado', create_type=False), nullable=False, default='Creado / Esperando Asignación')
+    prioridad = db.Column(ENUM(name='ticket_prioridad', create_type=False), nullable=True)
     encargado = db.Column(db.String(255), nullable=True)
     motivo_justificacion = db.Column(db.Text, nullable=True)
     creator_email = db.Column(db.String(255), nullable=True)

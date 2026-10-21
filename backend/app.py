@@ -19,20 +19,18 @@ from backend.routes.categorias import categorias_bp
 def ensure_enum_values():
     try:
         values = ['Cerrado/Resuelto', 'Cerrado / Resuelto', 'Asignado / En progreso']
-        for val in values:
-            try:
-                db.session.execute(db.text(f"ALTER TYPE ticket_estado ADD VALUE IF NOT EXISTS '{val}';"))
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-
         role_values = ['Admin Data', 'Admin HelpDesk', 'Admin Trade']
-        for rval in role_values:
-            try:
-                db.session.execute(db.text(f"ALTER TYPE user_role ADD VALUE IF NOT EXISTS '{rval}';"))
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
+        with db.engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+            for val in values:
+                try:
+                    conn.execute(db.text(f"ALTER TYPE ticket_estado ADD VALUE IF NOT EXISTS '{val}';"))
+                except Exception:
+                    pass
+            for rval in role_values:
+                try:
+                    conn.execute(db.text(f"ALTER TYPE user_role ADD VALUE IF NOT EXISTS '{rval}';"))
+                except Exception:
+                    pass
     except Exception:
         pass
 
