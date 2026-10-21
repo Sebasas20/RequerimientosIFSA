@@ -31,6 +31,21 @@ def ensure_enum_values():
                     conn.execute(db.text(f"ALTER TYPE user_role ADD VALUE IF NOT EXISTS '{rval}';"))
                 except Exception:
                     pass
+            # Migrar columnas ENUM a VARCHAR(50) para evitar conflictos de cast ::VARCHAR en SQLAlchemy 2.1+
+            migrations = [
+                "ALTER TABLE requirement_tickets ALTER COLUMN estado DROP DEFAULT;",
+                "ALTER TABLE requirement_tickets ALTER COLUMN estado TYPE VARCHAR(50) USING estado::text;",
+                "ALTER TABLE requirement_tickets ALTER COLUMN estado SET DEFAULT 'Creado / Esperando Asignación';",
+                "ALTER TABLE requirement_tickets ALTER COLUMN prioridad TYPE VARCHAR(50) USING prioridad::text;",
+                "ALTER TABLE requirement_users ALTER COLUMN role DROP DEFAULT;",
+                "ALTER TABLE requirement_users ALTER COLUMN role TYPE VARCHAR(50) USING role::text;",
+                "ALTER TABLE requirement_users ALTER COLUMN role SET DEFAULT 'Usuario IFSA';"
+            ]
+            for sql in migrations:
+                try:
+                    conn.execute(db.text(sql))
+                except Exception:
+                    pass
     except Exception:
         pass
 

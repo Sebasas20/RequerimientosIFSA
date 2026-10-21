@@ -1,7 +1,7 @@
 from backend.models.ticket import db
 from datetime import datetime
 import uuid
-from sqlalchemy.dialects.postgresql import UUID, ENUM
+from sqlalchemy.dialects.postgresql import UUID
 
 class User(db.Model):
     __tablename__ = 'requirement_users'
@@ -10,7 +10,7 @@ class User(db.Model):
     full_name = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(255), unique=True, nullable=False)
     hashed_password = db.Column(db.String(255), nullable=False)
-    role = db.Column(ENUM(name='user_role', create_type=False), nullable=False, default='Usuario IFSA')
+    role = db.Column(db.String(50), nullable=False, default='Usuario IFSA')
     empresa = db.Column(db.String(255), nullable=True)
     departamento = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
