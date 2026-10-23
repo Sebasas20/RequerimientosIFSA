@@ -45,7 +45,7 @@
           <span style="font-size: 1.1rem;">🏷️</span> Gestión de Categorías
         </div>
 
-        <div v-if="authState.canManageTickets && !authState.isAdminTrade" class="nav-item" :class="{ active: $route.path === '/encargados' }" @click="navigate('/encargados')">
+        <div v-if="authState.canManageTickets" class="nav-item" :class="{ active: $route.path === '/encargados' }" @click="navigate('/encargados')">
           <span style="font-size: 1.1rem;">🛠️</span> Gestión de Encargados
         </div>
         

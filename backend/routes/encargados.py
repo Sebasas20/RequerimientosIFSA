@@ -15,6 +15,8 @@ def get_encargados(current_user):
         query = query.filter_by(departamento_destino='DATA')
     elif current_user.role == 'Admin HelpDesk':
         query = query.filter_by(departamento_destino='HELPDESK')
+    elif current_user.role == 'Admin Trade':
+        query = query.filter_by(departamento_destino='TRADE')
     else:
         # Para Super Admin o usuarios generales, permitir filtro opcional por query param
         depto_filter = request.args.get('departamento_destino')
@@ -40,12 +42,14 @@ def create_encargado(current_user):
         departamento_destino = 'DATA'
     elif current_user.role == 'Admin HelpDesk':
         departamento_destino = 'HELPDESK'
+    elif current_user.role == 'Admin Trade':
+        departamento_destino = 'TRADE'
     else:
         # Super Admin especifica el departamento destino
         departamento_destino = data.get('departamento_destino', '').strip()
 
-    if departamento_destino not in ['DATA', 'HELPDESK']:
-        return jsonify({'error': 'Debe especificar un departamento destino válido (DATA o HELPDESK)'}), 400
+    if departamento_destino not in ['DATA', 'HELPDESK', 'TRADE']:
+        return jsonify({'error': 'Debe especificar un departamento destino válido (DATA, HELPDESK o TRADE)'}), 400
 
     # Validar duplicados en el mismo departamento
     existing = Encargado.query.filter_by(nombre=nombre, departamento_destino=departamento_destino).first()
@@ -75,6 +79,8 @@ def delete_encargado(current_user, id):
     if current_user.role == 'Admin Data' and encargado.departamento_destino != 'DATA':
         return jsonify({'error': 'No tiene permisos para eliminar encargados de otro departamento'}), 403
     if current_user.role == 'Admin HelpDesk' and encargado.departamento_destino != 'HELPDESK':
+        return jsonify({'error': 'No tiene permisos para eliminar encargados de otro departamento'}), 403
+    if current_user.role == 'Admin Trade' and encargado.departamento_destino != 'TRADE':
         return jsonify({'error': 'No tiene permisos para eliminar encargados de otro departamento'}), 403
 
     db.session.delete(encargado)

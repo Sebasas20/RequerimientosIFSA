@@ -24,7 +24,7 @@
           <p v-if="ticket.tipo_solicitud"><strong>Tipo de Solicitud / Clasificación:</strong> {{ ticket.tipo_solicitud }}</p>
           <p v-if="ticket.detalles_adicionales?.medidas"><strong>Medidas (Si Aplica):</strong> {{ ticket.detalles_adicionales.medidas }}</p>
           <p><strong>Prioridad:</strong> {{ ticket.prioridad || 'No asignada' }}</p>
-          <p v-if="ticket.departamento_destino !== 'TRADE'"><strong>Encargado / Técnico:</strong> {{ ticket.encargado || 'Sin asignar' }}</p>
+          <p><strong>Encargado / Técnico:</strong> {{ ticket.encargado || 'Sin asignar' }}</p>
           
           <div class="description-box">
             <strong>Descripción original:</strong>

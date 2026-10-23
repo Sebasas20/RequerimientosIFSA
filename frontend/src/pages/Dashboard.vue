@@ -28,7 +28,7 @@
           <div class="stat-value" style="color: var(--secondary-color);">{{ kpiStats.pausados }}</div>
           <div class="stat-label">Pausados</div>
         </div>
-        <div v-if="!authState.isAdminTrade && filterDeptoDestino !== 'TRADE'" class="stat-card">
+        <div class="stat-card">
           <div class="stat-value" style="color: var(--warning-color);">{{ kpiStats.sinEncargado }}</div>
           <div class="stat-label">Sin Encargado</div>
         </div>
@@ -114,7 +114,7 @@
             <th>Asunto</th>
             <th>Tipo / Caso</th>
             <th>Prioridad</th>
-            <th v-if="showEncargadoCol">Encargado</th>
+            <th>Encargado</th>
             <th>Estado</th>
             <th style="text-align: right;">Acciones</th>
           </tr>
@@ -132,7 +132,7 @@
             <td style="font-weight: 500; color: var(--text-main);">{{ ticket.asunto || ticket.descripcion.substring(0,40) }}</td>
             <td>{{ ticket.tipo_solicitud || '-' }}</td>
             <td>{{ ticket.prioridad || '-' }}</td>
-            <td v-if="showEncargadoCol">{{ ticket.departamento_destino === 'TRADE' ? '-' : (ticket.encargado || '-') }}</td>
+            <td>{{ ticket.encargado || '-' }}</td>
             <td>
               <span :class="getBadgeClass(ticket.estado)">
                 {{ ticket.estado }}
@@ -195,20 +195,13 @@ const kpiStats = computed(() => {
     enDesarrollo: tickets.value.filter(t => t.estado === 'Asignado/Desarrollo' || t.estado === 'Asignado / En progreso').length,
     prioridad1: tickets.value.filter(t => t.prioridad === 'Prioridad 1').length,
     pausados: tickets.value.filter(t => t.estado === 'Pausado').length,
-    sinEncargado: tickets.value.filter(t => t.departamento_destino !== 'TRADE' && (!t.encargado || t.encargado.trim() === '' || t.encargado.toLowerCase() === 'sin asignar')).length,
+    sinEncargado: tickets.value.filter(t => !t.encargado || t.encargado.trim() === '' || t.encargado.toLowerCase() === 'sin asignar').length,
     nuevos: tickets.value.filter(t => t.estado === 'Creado / Esperando Asignación').length
   }
 })
 
-const showEncargadoCol = computed(() => {
-  return !authState.isAreaAdmin && filterDeptoDestino.value !== 'TRADE'
-})
-
 const emptyTableColspan = computed(() => {
-  let cols = 8
-  if (!authState.isAreaAdmin) cols += 1
-  if (showEncargadoCol.value) cols += 1
-  return cols
+  return authState.isAreaAdmin ? 9 : 10
 })
 
 const fetchTickets = async () => {

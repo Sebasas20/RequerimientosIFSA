@@ -38,8 +38,8 @@
             </select>
           </div>
           
-          <!-- Desplegable dinámico de encargados según el departamento del ticket (Omitido para TRADE) -->
-          <div class="form-group" v-if="ticket.departamento_destino !== 'TRADE'">
+          <!-- Desplegable dinámico de encargados según el departamento del ticket -->
+          <div class="form-group">
             <label>Encargado / Técnico</label>
             <select v-model="form.encargado" class="form-control">
               <option value="">Sin asignar / Ninguno</option>
@@ -149,13 +149,11 @@ const getAreaBadgeClass = (depto) => {
 }
 
 onMounted(async () => {
-  if (props.ticket.departamento_destino !== 'TRADE') {
-    try {
-      const listEnc = await encargadoService.getEncargados(props.ticket.departamento_destino || '')
-      encargadosList.value = listEnc
-    } catch (err) {
-      console.error('Error al cargar la lista de encargados:', err)
-    }
+  try {
+    const listEnc = await encargadoService.getEncargados(props.ticket.departamento_destino || '')
+    encargadosList.value = listEnc
+  } catch (err) {
+    console.error('Error al cargar la lista de encargados:', err)
   }
 
   if (props.ticket.departamento_destino === 'HELPDESK') {
@@ -179,11 +177,9 @@ const updateTicket = async () => {
   try {
     const payload = {
       prioridad: form.prioridad,
+      encargado: form.encargado,
       estado: form.estado,
       motivo_justificacion: form.motivo_justificacion
-    }
-    if (props.ticket.departamento_destino !== 'TRADE') {
-      payload.encargado = form.encargado
     }
     if (props.ticket.departamento_destino === 'HELPDESK') {
       payload.tipo_solicitud = form.tipo_solicitud

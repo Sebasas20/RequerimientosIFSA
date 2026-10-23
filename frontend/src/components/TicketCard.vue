@@ -35,7 +35,7 @@
           <span class="meta-icon">📌</span>
           <span class="meta-text">{{ ticket.tipo_solicitud }}</span>
         </div>
-        <div class="meta-row" v-if="!isAreaAdmin && ticket.departamento_destino !== 'TRADE' && ticket.encargado">
+        <div class="meta-row" v-if="ticket.encargado">
           <span class="meta-icon">🛠️</span>
           <span class="meta-text">Encargado: <strong>{{ ticket.encargado }}</strong></span>
         </div>

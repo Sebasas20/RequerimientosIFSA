@@ -26,8 +26,6 @@ router.beforeEach((to, from, next) => {
     next('/')
   } else if (to.meta.requiresTicketAdmin && !authState.canManageTickets) {
     next('/')
-  } else if (to.path === '/encargados' && authState.isAdminTrade) {
-    next('/')
   } else if (to.path === '/login' && authState.isAuthenticated) {
     next('/')
   } else {
