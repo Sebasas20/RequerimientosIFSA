@@ -1,9 +1,61 @@
-from flask import Blueprint, request, jsonify
+import json
+import threading
+import urllib.request
+from flask import Blueprint, request, jsonify, current_app
+from config import Config
 from backend.models.ticket import db, Ticket
 from backend.utils.validators import validate_json, sanitize_input
 from backend.utils.auth_middleware import token_required, admin_required, ticket_admin_required
 
 tickets_bp = Blueprint('tickets', __name__)
+
+
+def _send_webhook_request(webhook_url, payload, secret_token=None):
+    headers = {'Content-Type': 'application/json'}
+    if secret_token:
+        headers['X-Webhook-Token'] = secret_token
+
+    try:
+        try:
+            import requests as req_lib
+            resp = req_lib.post(webhook_url, json=payload, headers=headers, timeout=10)
+            resp.raise_for_status()
+        except ImportError:
+            data_bytes = json.dumps(payload).encode('utf-8')
+            req = urllib.request.Request(webhook_url, data=data_bytes, headers=headers, method='POST')
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                resp.read()
+        print(f"[Webhook] Notificación de Información Requerida enviada para el ticket {payload.get('ticket_id')}")
+    except Exception as e:
+        print(f"[Webhook Error] No se pudo enviar notificación para ticket {payload.get('ticket_id')}: {e}")
+
+
+def notify_information_required(ticket_dict, motivo_justificacion, encargado_name):
+    webhook_url = getattr(Config, 'N8N_WEBHOOK_INFO_REQUERIDA_URL', None)
+    if not webhook_url:
+        return
+
+    secret_token = getattr(Config, 'N8N_WEBHOOK_SECRET', None)
+    payload = {
+        "event": "ticket_information_required",
+        "ticket_id": str(ticket_dict.get("id", "")),
+        "asunto": ticket_dict.get("asunto") or (ticket_dict.get("descripcion", "")[:50] if ticket_dict.get("descripcion") else ""),
+        "creator_email": ticket_dict.get("creator_email"),
+        "nombre_solicitante": ticket_dict.get("nombre_solicitante"),
+        "departamento_destino": ticket_dict.get("departamento_destino") or "DATA",
+        "tipo_solicitud": ticket_dict.get("tipo_solicitud"),
+        "motivo_justificacion": motivo_justificacion,
+        "encargado": encargado_name,
+        "empresa": ticket_dict.get("empresa"),
+        "departamento": ticket_dict.get("departamento")
+    }
+
+    thread = threading.Thread(
+        target=_send_webhook_request,
+        args=(webhook_url, payload, secret_token),
+        daemon=True
+    )
+    thread.start()
 
 @tickets_bp.route('/', strict_slashes=False, methods=['GET'])
 @token_required
@@ -185,7 +237,17 @@ def update_ticket(current_user, ticket_id):
             ticket.detalles_adicionales = current_detalles
 
         db.session.commit()
-        return jsonify(ticket.to_dict()), 200
+        ticket_dict = ticket.to_dict()
+
+        if ticket.estado == 'Información Requerida' and ('estado' in data or 'motivo_justificacion' in data):
+            encargado_name = ticket.encargado or getattr(current_user, 'full_name', None) or getattr(current_user, 'email', '')
+            notify_information_required(
+                ticket_dict=ticket_dict,
+                motivo_justificacion=ticket.motivo_justificacion,
+                encargado_name=encargado_name
+            )
+
+        return jsonify(ticket_dict), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500

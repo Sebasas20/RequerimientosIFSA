@@ -28,3 +28,9 @@ class Config:
     CACHE_TIMEOUT_DAILY = 300     
     CACHE_TIMEOUT_HISTORICAL = 3600  
     CACHE_TIMEOUT_STATIC = 86400
+
+    N8N_WEBHOOK_INFO_REQUERIDA_URL = os.environ.get(
+        'N8N_WEBHOOK_INFO_REQUERIDA_URL',
+        'https://n8n.gif-amp.com/webhook/ticket-informacion-requerida'
+    ).strip('"\'')
+    N8N_WEBHOOK_SECRET = os.environ.get('N8N_WEBHOOK_SECRET', '').strip('"\'')

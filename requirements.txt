@@ -6,4 +6,5 @@ psycopg[binary]>=3.1.18
 PyJWT==2.8.0
 python-dotenv==1.0.1
 gunicorn==23.0.0
+requests==2.32.3
 
