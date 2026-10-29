@@ -84,7 +84,7 @@ export const authState = reactive({
   },
 
   get isArturosTheme() {
-    return this.user && ['Usuario Arturos', 'Admin Trade'].includes(this.user.role)
+    return this.user && ['Usuario Arturos', 'Usuario Planta', 'Admin Trade'].includes(this.user.role)
   },
   
   login(tokenData, userData) {

@@ -19,7 +19,7 @@ from backend.routes.categorias import categorias_bp
 def ensure_enum_values():
     try:
         values = ['Cerrado/Resuelto', 'Cerrado / Resuelto', 'Asignado / En progreso']
-        role_values = ['Admin Data', 'Admin HelpDesk', 'Admin Trade']
+        role_values = ['Admin Data', 'Admin HelpDesk', 'Admin Trade', 'Usuario Planta']
         with db.engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
             for val in values:
                 try:

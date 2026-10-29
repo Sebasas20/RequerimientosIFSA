@@ -78,7 +78,7 @@ def get_tickets(current_user):
             query = query.filter(Ticket.creator_email == current_user.email)
             if current_user.role == 'Usuario Arturos':
                 query = query.filter(Ticket.departamento_destino.in_(['HELPDESK', 'TRADE']))
-            elif current_user.role in ['Usuario IFSA', 'Usuario']:
+            elif current_user.role in ['Usuario IFSA', 'Usuario', 'Usuario Planta']:
                 query = query.filter(Ticket.departamento_destino.in_(['DATA', 'HELPDESK']))
 
             depto_destino = request.args.get('departamento_destino')
@@ -131,8 +131,8 @@ def create_ticket(current_user):
         if current_user.role == 'Usuario Arturos' and depto_destino == 'DATA':
             return jsonify({"error": "Los usuarios de Arturos solo pueden realizar solicitudes a HelpDesk o Trade Marketing"}), 403
 
-        if current_user.role in ['Usuario IFSA', 'Usuario'] and depto_destino == 'TRADE':
-            return jsonify({"error": "Los usuarios de IFSA no tienen acceso a solicitudes de Trade Marketing"}), 403
+        if current_user.role in ['Usuario IFSA', 'Usuario', 'Usuario Planta'] and depto_destino == 'TRADE':
+            return jsonify({"error": "No tiene acceso a solicitudes de Trade Marketing"}), 403
 
         asunto = data.get('asunto') or data['descripcion'][:60]
         

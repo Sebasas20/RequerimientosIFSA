@@ -41,8 +41,13 @@ export const authService = {
 };
 
 export const userService = {
-    async getUsers() {
-        const res = await fetch(`${API_URL}/users/`, { headers: getHeaders() });
+    async getUsers(filters = {}) {
+        const params = new URLSearchParams();
+        if (filters.search) params.append('search', filters.search);
+        if (filters.role) params.append('role', filters.role);
+        const queryStr = params.toString();
+        const url = queryStr ? `${API_URL}/users/?${queryStr}` : `${API_URL}/users/`;
+        const res = await fetch(url, { headers: getHeaders() });
         return handleResponse(res);
     },
     async createUser(userData) {
@@ -50,6 +55,21 @@ export const userService = {
             method: 'POST',
             headers: getHeaders(),
             body: JSON.stringify(userData)
+        });
+        return handleResponse(res);
+    },
+    async updatePassword(userId, password) {
+        const res = await fetch(`${API_URL}/users/${userId}/password`, {
+            method: 'PATCH',
+            headers: getHeaders(),
+            body: JSON.stringify({ password })
+        });
+        return handleResponse(res);
+    },
+    async deleteUser(userId) {
+        const res = await fetch(`${API_URL}/users/${userId}`, {
+            method: 'DELETE',
+            headers: getHeaders()
         });
         return handleResponse(res);
     }

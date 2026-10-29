@@ -1,6 +1,6 @@
 -- db/schema_users.sql
 DO $$ BEGIN
-    CREATE TYPE user_role AS ENUM ('Administrador', 'Usuario', 'Usuario IFSA', 'Usuario Arturos', 'Admin Data', 'Admin HelpDesk', 'Admin Trade');
+    CREATE TYPE user_role AS ENUM ('Administrador', 'Usuario', 'Usuario IFSA', 'Usuario Arturos', 'Usuario Planta', 'Admin Data', 'Admin HelpDesk', 'Admin Trade');
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 CREATE TABLE IF NOT EXISTS requirement_users (

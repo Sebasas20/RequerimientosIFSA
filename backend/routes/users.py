@@ -10,7 +10,17 @@ users_bp = Blueprint('users', __name__)
 @token_required
 @admin_required
 def get_users(current_user):
-    users = User.query.all()
+    query = User.query
+
+    search = request.args.get('search', '').strip()
+    if search:
+        query = query.filter(User.email.ilike(f"%{search}%"))
+
+    role = request.args.get('role', '').strip()
+    if role:
+        query = query.filter(User.role == role)
+
+    users = query.order_by(User.created_at.desc()).all()
     return jsonify([user.to_dict() for user in users])
 
 @users_bp.route('/', methods=['POST'], strict_slashes=False)
@@ -41,6 +51,46 @@ def create_user(current_user):
         db.session.add(new_user)
         db.session.commit()
         return jsonify(new_user.to_dict()), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@users_bp.route('/<string:user_id>/password', methods=['PATCH'], strict_slashes=False)
+@token_required
+@admin_required
+def update_user_password(current_user, user_id):
+    user = User.query.filter_by(id=user_id).first()
+    if not user:
+        return jsonify({'error': 'Usuario no encontrado'}), 404
+
+    data = request.get_json() or {}
+    new_password = (data.get('password') or '').strip()
+    if not new_password:
+        return jsonify({'error': 'La nueva contraseña es requerida'}), 400
+
+    try:
+        user.hashed_password = generate_password_hash(new_password)
+        db.session.commit()
+        return jsonify({'message': 'Contraseña actualizada exitosamente', 'user': user.to_dict()}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@users_bp.route('/<string:user_id>', methods=['DELETE'], strict_slashes=False)
+@token_required
+@admin_required
+def delete_user(current_user, user_id):
+    user = User.query.filter_by(id=user_id).first()
+    if not user:
+        return jsonify({'error': 'Usuario no encontrado'}), 404
+
+    if str(user.id) == str(current_user.id):
+        return jsonify({'error': 'No puede eliminar su propio usuario activo'}), 400
+
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'message': 'Usuario eliminado exitosamente'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
