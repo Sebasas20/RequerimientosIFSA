@@ -15,7 +15,7 @@
         <input 
           type="text" 
           v-model="searchEmail" 
-          placeholder="Buscar usuario por correo electrónico..." 
+          placeholder="Buscar usuario por nombre o correo electrónico..." 
           class="form-control search-input" 
         />
       </div>
@@ -271,11 +271,13 @@ const form = ref({
 })
 
 const filteredUsers = computed(() => {
+  const query = searchEmail.value.trim().toLowerCase()
   return users.value.filter(u => {
-    const matchesEmail = !searchEmail.value.trim() || 
-      (u.email && u.email.toLowerCase().includes(searchEmail.value.trim().toLowerCase()))
+    const matchesSearch = !query || 
+      (u.email && u.email.toLowerCase().includes(query)) ||
+      (u.full_name && u.full_name.toLowerCase().includes(query))
     const matchesRole = !filterRole.value || u.role === filterRole.value
-    return matchesEmail && matchesRole
+    return matchesSearch && matchesRole
   })
 })
 

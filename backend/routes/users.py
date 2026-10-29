@@ -14,7 +14,11 @@ def get_users(current_user):
 
     search = request.args.get('search', '').strip()
     if search:
-        query = query.filter(User.email.ilike(f"%{search}%"))
+        search_term = f"%{search}%"
+        query = query.filter(db.or_(
+            User.email.ilike(search_term),
+            User.full_name.ilike(search_term)
+        ))
 
     role = request.args.get('role', '').strip()
     if role:
